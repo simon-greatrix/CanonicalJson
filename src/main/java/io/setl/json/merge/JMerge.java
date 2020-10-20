@@ -6,7 +6,6 @@ import javax.json.JsonObject;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 
-import io.setl.json.JNavigableObject;
 import io.setl.json.JObject;
 import io.setl.json.Primitive;
 

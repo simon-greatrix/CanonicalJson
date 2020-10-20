@@ -20,7 +20,6 @@ import javax.json.stream.JsonParser.Event;
 
 import org.junit.Test;
 
-import io.setl.json.JNavigableObject;
 import io.setl.json.JObject;
 import io.setl.json.builder.JArrayBuilder;
 import io.setl.json.builder.JObjectBuilder;

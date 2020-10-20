@@ -39,6 +39,8 @@ import io.setl.json.primitive.PNull;
 import io.setl.json.primitive.PString;
 import io.setl.json.primitive.PTrue;
 import io.setl.json.primitive.numbers.PNumber;
+import io.setl.json.structure.JArrayIterator;
+import io.setl.json.structure.JArraySpliterator;
 
 /**
  * Representation of an array in JSON.
@@ -93,123 +95,6 @@ public class JArray implements JsonArray, Primitive {
 
   /** serial version UID. */
   private static final long serialVersionUID = 2L;
-
-
-
-  static class MyIterator implements ListIterator<JsonValue> {
-
-    private final ListIterator<Primitive> me;
-
-
-    MyIterator(ListIterator<Primitive> me) {
-      this.me = me;
-    }
-
-
-    @Override
-    public void add(JsonValue jsonValue) {
-      me.add(Primitive.cast(jsonValue));
-    }
-
-
-    @Override
-    public boolean hasNext() {
-      return me.hasNext();
-    }
-
-
-    @Override
-    public boolean hasPrevious() {
-      return me.hasPrevious();
-    }
-
-
-    @Override
-    public JsonValue next() {
-      return me.next();
-    }
-
-
-    @Override
-    public int nextIndex() {
-      return me.nextIndex();
-    }
-
-
-    @Override
-    public JsonValue previous() {
-      return me.previous();
-    }
-
-
-    @Override
-    public int previousIndex() {
-      return me.previousIndex();
-    }
-
-
-    @Override
-    public void remove() {
-      me.remove();
-    }
-
-
-    @Override
-    public void set(JsonValue jsonValue) {
-      me.set(Primitive.cast(jsonValue));
-    }
-
-  }
-
-
-
-  /**
-   * Spliterator over JsonValues instead of Primitives. I'm not sure why Java requires a wrapper as every Primitive is a JsonValue, but it is happier with one.
-   */
-  static class MySpliterator implements Spliterator<JsonValue> {
-
-    private final Spliterator<Primitive> me;
-
-
-    MySpliterator(Spliterator<Primitive> me) {
-      this.me = me;
-    }
-
-
-    @Override
-    public int characteristics() {
-      return me.characteristics();
-    }
-
-
-    @Override
-    public long estimateSize() {
-      return me.estimateSize();
-    }
-
-
-    @Override
-    public long getExactSizeIfKnown() {
-      return me.getExactSizeIfKnown();
-    }
-
-
-    @Override
-    public boolean tryAdvance(Consumer<? super JsonValue> action) {
-      return me.tryAdvance(action);
-    }
-
-
-    @Override
-    public Spliterator<JsonValue> trySplit() {
-      Spliterator<Primitive> newSplit = me.trySplit();
-      if (newSplit != null) {
-        return new MySpliterator(newSplit);
-      }
-      return null;
-    }
-
-  }
 
 
   /**
@@ -949,7 +834,7 @@ public class JArray implements JsonArray, Primitive {
   @Override
   @Nonnull
   public ListIterator<JsonValue> listIterator(int index) {
-    return new MyIterator(myList.listIterator(index));
+    return new JArrayIterator(myList.listIterator(index));
   }
 
 
@@ -1211,7 +1096,7 @@ public class JArray implements JsonArray, Primitive {
 
   @Override
   public Spliterator<JsonValue> spliterator() {
-    return new MySpliterator(myList.spliterator());
+    return new JArraySpliterator(myList.spliterator());
   }
 
 

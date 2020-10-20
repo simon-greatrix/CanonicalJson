@@ -14,7 +14,6 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.TreeNode;
 
 import io.setl.json.JArray;
-import io.setl.json.JNavigableObject;
 import io.setl.json.JObject;
 import io.setl.json.exception.JsonIOException;
 import io.setl.json.io.Location;

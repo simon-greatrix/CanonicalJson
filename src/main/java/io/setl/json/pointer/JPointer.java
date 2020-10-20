@@ -9,7 +9,6 @@ import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 
 import io.setl.json.JArray;
-import io.setl.json.JNavigableObject;
 import io.setl.json.JObject;
 
 /**

@@ -1,4 +1,4 @@
-package io.setl.json;
+package io.setl.json.structure;
 
 import java.util.Comparator;
 import java.util.NavigableMap;
@@ -9,69 +9,37 @@ import javax.json.JsonValue;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import io.setl.json.JObject;
 import io.setl.json.jackson.JsonObjectSerializer;
 
 /**
- * Representation of an object in JSON.
+ * View of an object in JSON represented as a Navigable Map. Any changes to this will also be applied to the original JSON object.
  *
- * <p>No value in the object can be null. If you try to add one, it will be replaced by a Primitive instance holding a null.
- *
- * <p>As JSON objects can contain mixed content, this class provides type-checking accessors to the object properties. There are multiple varieties of each
- * accessor which obey these contracts:
- *
- * <dl>
- * <dt><code>opt<i>Type</i>(key)</code></dt>
- * <dd>
- * <ul>
- * <li>If the key is not present, returns null.</li>
- * <li>If the entry is not the required type, returns null.
- * <li>Otherwise returns the entry
- * </ul>
- * </dd>
- *
- * <dt><code>get<i>Type</i>(index, default)</code></dt>
- * <dd>
- * <ul>
- * <li>If the key is not present, returns the default.
- * <li>If the entry is not the required type, returns the default.
- * <li>Otherwise returns the entry
- * </ul>
- * </dd>
- * <dt><code>get<i>Type</i>(index, function)</code></dt>
- * <dd>
- * <ul>
- * <li>If the key is not present, invokes the function to derive a suitable value.
- * <li>If the entry is not the required type, invokes the function to derive a suitable value.
- * <li>Otherwise returns the entry
- * </ul>
- * </dd>
- * <dt><code>get<i>Type</i>(index)</code></dt>
- * <dd>
- * <ul>
- * <li>If the key is not present, throws a <code>MissingItemException</code>.
- * <li>If the entry is not the required type, throws an <code>IncorrectTypeException</code>.
- * <li>Otherwise returns the entry
- * </ul>
- * </dd>
- * </dl>
- *
- * <p>The numeric accessors follow the normal Java rules for primitive type conversions and consider any number to be the correct type. For example, if you
- * call <code>getIntSafe(key)</code> and the key maps to the Long value 1L<<50, then the call returns the value of Integer.MAX_VALUE, as would be expected
- * for a narrowing primitive conversion, rather than throwing a <code>IncorrectTypeException</code>.
+ * @author Simon Greatrix
  */
 
 @JsonSerialize(using = JsonObjectSerializer.class)
 public class JNavigableObject extends JObject implements NavigableMap<String, JsonValue> {
 
 
-  JNavigableObject(NavigableMap<String, Primitive> map) {
+  private static Entry<String, JsonValue> nv(Entry<String, JObjectEntry> entry) {
+    return entry != null ? entry.getValue() : null;
+  }
+
+
+  /**
+   * Create a JSON view on the supplied map. Note that instances of this are views upon another object and hence this constructor does *not* create a deep copy.
+   *
+   * @param map the map to encapsulate
+   */
+  public JNavigableObject(NavigableMap<String, JObjectEntry> map) {
     super(map, false);
   }
 
 
   @Override
   public Entry<String, JsonValue> ceilingEntry(String key) {
-    return new MyEntry(myMap.ceilingEntry(key));
+    return nv(myMap.ceilingEntry(key));
   }
 
 
@@ -84,6 +52,17 @@ public class JNavigableObject extends JObject implements NavigableMap<String, Js
   @Override
   public Comparator<? super String> comparator() {
     return myMap.comparator();
+  }
+
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>This copy will not be linked to the original JSON object and changes to the copy will not affect any other pre-existing object.</p>
+   */
+  @Override
+  public JNavigableObject copy() {
+    return new JNavigableObject(myMap);
   }
 
 
@@ -101,7 +80,7 @@ public class JNavigableObject extends JObject implements NavigableMap<String, Js
 
   @Override
   public Entry<String, JsonValue> firstEntry() {
-    return new MyEntry(myMap.firstEntry());
+    return nv(myMap.firstEntry());
   }
 
 
@@ -113,7 +92,7 @@ public class JNavigableObject extends JObject implements NavigableMap<String, Js
 
   @Override
   public Entry<String, JsonValue> floorEntry(String key) {
-    return new MyEntry(myMap.floorEntry(key));
+    return nv(myMap.floorEntry(key));
   }
 
 
@@ -138,7 +117,7 @@ public class JNavigableObject extends JObject implements NavigableMap<String, Js
 
   @Override
   public Entry<String, JsonValue> higherEntry(String key) {
-    return new MyEntry(myMap.higherEntry(key));
+    return nv(myMap.higherEntry(key));
   }
 
 
@@ -150,7 +129,7 @@ public class JNavigableObject extends JObject implements NavigableMap<String, Js
 
   @Override
   public Entry<String, JsonValue> lastEntry() {
-    return new MyEntry(myMap.lastEntry());
+    return nv(myMap.lastEntry());
   }
 
 
@@ -162,7 +141,7 @@ public class JNavigableObject extends JObject implements NavigableMap<String, Js
 
   @Override
   public Entry<String, JsonValue> lowerEntry(String key) {
-    return new MyEntry(myMap.lowerEntry(key));
+    return nv(myMap.lowerEntry(key));
   }
 
 
@@ -179,14 +158,20 @@ public class JNavigableObject extends JObject implements NavigableMap<String, Js
 
 
   @Override
+  public JNavigableObject navigableView() {
+    return this;
+  }
+
+
+  @Override
   public Entry<String, JsonValue> pollFirstEntry() {
-    return new MyEntry(myMap.pollFirstEntry());
+    return nv(myMap.pollFirstEntry());
   }
 
 
   @Override
   public Entry<String, JsonValue> pollLastEntry() {
-    return new MyEntry(myMap.pollLastEntry());
+    return nv(myMap.pollLastEntry());
   }
 
 
@@ -213,6 +198,12 @@ public class JNavigableObject extends JObject implements NavigableMap<String, Js
   @Nonnull
   public SortedMap<String, JsonValue> tailMap(String fromKey) {
     return new JNavigableObject(myMap.tailMap(fromKey, true));
+  }
+
+
+  @Override
+  public JObject withInsertOrder() {
+    throw new UnsupportedOperationException("A navigable view on a JSON Object cannot be viewed in insert order.");
   }
 
 }

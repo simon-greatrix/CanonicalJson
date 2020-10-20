@@ -3,7 +3,6 @@ package io.setl.json;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -11,22 +10,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NavigableMap;
-import java.util.Objects;
 import java.util.Set;
-import java.util.Spliterator;
 import java.util.TreeMap;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.BinaryOperator;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
 import java.util.function.ToLongFunction;
 import java.util.function.UnaryOperator;
-import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.json.JsonArray;
@@ -35,7 +27,6 @@ import javax.json.JsonObject;
 import javax.json.JsonString;
 import javax.json.JsonValue;
 
-import io.setl.json.JArray.MySpliterator;
 import io.setl.json.exception.IncorrectTypeException;
 import io.setl.json.exception.MissingItemException;
 import io.setl.json.primitive.PFalse;
@@ -43,6 +34,10 @@ import io.setl.json.primitive.PNull;
 import io.setl.json.primitive.PString;
 import io.setl.json.primitive.PTrue;
 import io.setl.json.primitive.numbers.PNumber;
+import io.setl.json.structure.JNavigableObject;
+import io.setl.json.structure.JObjectEntries;
+import io.setl.json.structure.JObjectEntry;
+import io.setl.json.structure.JObjectValues;
 
 public class JObject implements JsonObject, Primitive {
 
@@ -65,485 +60,6 @@ public class JObject implements JsonObject, Primitive {
     }
     return len1 - len2;
   };
-
-
-
-  /**
-   * Set which converts JsonValue to Primitives.
-   */
-  static class MyEntries implements Set<Entry<String, JsonValue>> {
-
-    private final Set<Entry<String, Primitive>> mySet;
-
-
-    MyEntries(Set<Entry<String, Primitive>> mySet) {
-      this.mySet = mySet;
-    }
-
-
-    @Override
-    public boolean add(Entry<String, JsonValue> entry) {
-      throw new UnsupportedOperationException();
-    }
-
-
-    @Override
-    public boolean addAll(@Nonnull Collection<? extends Entry<String, JsonValue>> c) {
-      throw new UnsupportedOperationException();
-    }
-
-
-    @Override
-    public void clear() {
-      mySet.clear();
-    }
-
-
-    @Override
-    public boolean contains(Object o) {
-      if (!(o instanceof Entry<?, ?>)) {
-        return false;
-      }
-      Entry<?, ?> e = (Entry<?, ?>) o;
-      if (!(e.getKey() instanceof String)) {
-        return false;
-      }
-      Object v = e.getValue();
-      if (v instanceof Primitive) {
-        return mySet.contains(e);
-      }
-      if (v != null && !(v instanceof JsonValue)) {
-        return false;
-      }
-      return mySet.contains(new SimpleEntry<>(e.getKey(), Primitive.cast((JsonValue) e.getValue())));
-    }
-
-
-    @Override
-    public boolean containsAll(Collection<?> c) {
-      for (Object o : c) {
-        if (!contains(o)) {
-          return false;
-        }
-      }
-      return true;
-    }
-
-
-    @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
-    @Override
-    public boolean equals(Object o) {
-      return mySet.equals(o);
-    }
-
-
-    @Override
-    public int hashCode() {
-      return mySet.hashCode();
-    }
-
-
-    @Override
-    public boolean isEmpty() {
-      return mySet.isEmpty();
-    }
-
-
-    @Override
-    @Nonnull
-    public Iterator<Entry<String, JsonValue>> iterator() {
-      final Iterator<Entry<String, Primitive>> myIterator = mySet.iterator();
-      return new Iterator<>() {
-
-        @Override
-        public boolean hasNext() {
-          return myIterator.hasNext();
-        }
-
-
-        @Override
-        public Entry<String, JsonValue> next() {
-          return new MyEntry(myIterator.next());
-        }
-
-
-        @Override
-        public void remove() {
-          myIterator.remove();
-        }
-      };
-    }
-
-
-    @Override
-    public Stream<Entry<String, JsonValue>> parallelStream() {
-      return mySet.parallelStream().map(MyEntry::new);
-    }
-
-
-    @Override
-    public boolean remove(Object o) {
-      return mySet.remove(o);
-    }
-
-
-    @Override
-    public boolean removeAll(@Nonnull Collection<?> c) {
-      return mySet.removeAll(c);
-    }
-
-
-    @Override
-    public boolean removeIf(Predicate<? super Entry<String, JsonValue>> filter) {
-      return mySet.removeIf(e -> filter.test(new MyEntry(e)));
-    }
-
-
-    @Override
-    public boolean retainAll(@Nonnull Collection<?> c) {
-      return mySet.retainAll(c);
-    }
-
-
-    @Override
-    public int size() {
-      return mySet.size();
-    }
-
-
-    @Override
-    public Spliterator<Entry<String, JsonValue>> spliterator() {
-      return new MyEntrySpliterator(mySet.spliterator());
-    }
-
-
-    @Override
-    public Stream<Entry<String, JsonValue>> stream() {
-      return mySet.stream().map(MyEntry::new);
-    }
-
-
-    @Override
-    @Nonnull
-    public Object[] toArray() {
-      return mySet.toArray();
-    }
-
-
-    @SuppressWarnings("SuspiciousToArrayCall")
-    @Override
-    @Nonnull
-    public <T> T[] toArray(@Nonnull T[] a) {
-      return mySet.toArray(a);
-    }
-
-
-    @SuppressWarnings("SuspiciousToArrayCall")
-    @Override
-    @Nonnull
-    public <T> T[] toArray(@Nonnull IntFunction<T[]> generator) {
-      return mySet.toArray(generator);
-    }
-
-
-    @Override
-    public String toString() {
-      return mySet.toString();
-    }
-
-  }
-
-
-
-  static class MyEntry implements Entry<String, JsonValue> {
-
-    private final Entry<String, Primitive> me;
-
-
-    public MyEntry(Entry<String, Primitive> me) {
-      this.me = me;
-    }
-
-
-    @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      return me.equals(o);
-    }
-
-
-    @Override
-    public String getKey() {
-      return me.getKey();
-    }
-
-
-    @Override
-    public JsonValue getValue() {
-      return me.getValue();
-    }
-
-
-    @Override
-    public int hashCode() {
-      return me.hashCode();
-    }
-
-
-    @Override
-    public JsonValue setValue(JsonValue value) {
-      return me.setValue(Primitive.cast(value));
-    }
-
-  }
-
-
-
-  /**
-   * Spliterator over JsonValues instead of Primitives. If someone called setValue on the output, we have to convert to a Primitive.
-   */
-  static class MyEntrySpliterator implements Spliterator<Entry<String, JsonValue>> {
-
-
-    private final Spliterator<Entry<String, Primitive>> me;
-
-
-    MyEntrySpliterator(Spliterator<Entry<String, Primitive>> me) {
-      this.me = me;
-    }
-
-
-    @Override
-    public int characteristics() {
-      return me.characteristics();
-    }
-
-
-    @Override
-    public long estimateSize() {
-      return me.estimateSize();
-    }
-
-
-    @Override
-    public long getExactSizeIfKnown() {
-      return me.getExactSizeIfKnown();
-    }
-
-
-    @Override
-    public boolean tryAdvance(Consumer<? super Entry<String, JsonValue>> action) {
-      return me.tryAdvance(e -> action.accept(new MyEntry(e)));
-    }
-
-
-    @Override
-    public Spliterator<Entry<String, JsonValue>> trySplit() {
-      Spliterator<Entry<String, Primitive>> newSplit = me.trySplit();
-      if (newSplit != null) {
-        return new MyEntrySpliterator(newSplit);
-      }
-      return null;
-    }
-
-  }
-
-
-
-  private static class MyValues implements Collection<JsonValue> {
-
-    private final Collection<Primitive> me;
-
-
-    MyValues(Collection<Primitive> me) {
-      this.me = me;
-    }
-
-
-    public boolean add(JsonValue primitive) {
-      throw new UnsupportedOperationException("Add is not supported on a map's values");
-    }
-
-
-    public boolean addAll(@Nonnull Collection<? extends JsonValue> c) {
-      throw new UnsupportedOperationException("Add is not supported on a map's values");
-    }
-
-
-    @Override
-    public void clear() {
-      me.clear();
-    }
-
-
-    @Override
-    public boolean contains(Object o) {
-      return me.contains(o);
-    }
-
-
-    @Override
-    public boolean containsAll(@Nonnull Collection<?> c) {
-      return me.containsAll(c);
-    }
-
-
-    @Override
-    public boolean isEmpty() {
-      return me.isEmpty();
-    }
-
-
-    @Override
-    @Nonnull
-    public Iterator<JsonValue> iterator() {
-      final Iterator<Primitive> myIterator = me.iterator();
-      return new Iterator<>() {
-        @Override
-        public boolean hasNext() {
-          return myIterator.hasNext();
-        }
-
-
-        @Override
-        public JsonValue next() {
-          return myIterator.next();
-        }
-
-
-        @Override
-        public void remove() {
-          myIterator.remove();
-        }
-      };
-    }
-
-
-    @Override
-    public Stream<JsonValue> parallelStream() {
-      return me.parallelStream().map(JsonValue.class::cast);
-    }
-
-
-    @Override
-    public boolean remove(Object o) {
-      return me.remove(o);
-    }
-
-
-    @Override
-    public boolean removeAll(@Nonnull Collection<?> c) {
-      return me.removeAll(c);
-    }
-
-
-    @Override
-    public boolean removeIf(Predicate<? super JsonValue> filter) {
-      return me.removeIf(filter);
-    }
-
-
-    @Override
-    public boolean retainAll(@Nonnull Collection<?> c) {
-      return me.retainAll(c);
-    }
-
-
-    @Override
-    public int size() {
-      return me.size();
-    }
-
-
-    @Override
-    public Spliterator<JsonValue> spliterator() {
-      return new MySpliterator(me.spliterator());
-    }
-
-
-    @Override
-    public Stream<JsonValue> stream() {
-      return me.stream().map(JsonValue.class::cast);
-    }
-
-
-    @Override
-    @Nonnull
-    public Object[] toArray() {
-      return me.toArray();
-    }
-
-
-    @SuppressWarnings("SuspiciousToArrayCall")
-    @Override
-    @Nonnull
-    public <T> T[] toArray(@Nonnull T[] a) {
-      return me.toArray(a);
-    }
-
-
-    @SuppressWarnings("SuspiciousToArrayCall")
-    @Override
-    public <T> T[] toArray(IntFunction<T[]> generator) {
-      return me.toArray(generator);
-    }
-
-  }
-
-
-
-  static class Node {
-
-    Node after;
-
-    Node before;
-
-    Primitive value;
-
-
-    Node() {
-      value = PNull.NULL;
-      before = this;
-      after = this;
-    }
-
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o instanceof Node) {
-        return value.equals(((Node)o).value);
-      }
-      return false;
-    }
-
-
-    @Override
-    public int hashCode() {
-      return value.hashCode();
-    }
-
-
-    Node(Node head, JsonValue value) {
-      after = head.after;
-      after.before = this;
-      before = head;
-      before.after = this;
-      this.value = Primitive.cast(value);
-    }
-
-
-    void remove() {
-      before.after = after;
-      after.before = before;
-    }
-
-  }
 
 
   /**
@@ -576,24 +92,36 @@ public class JObject implements JsonObject, Primitive {
   }
 
 
-  private final static Primitive nn(Node node) {
-    return (node != null) ? node.value : null;
+  private static Primitive nn(JObjectEntry entry) {
+    return (entry != null) ? entry.getValue() : null;
   }
 
-  protected final NavigableMap<String, Node> myMap;
 
-  protected final Node root;
+  protected final NavigableMap<String, JObjectEntry> myMap;
+
+  protected final JObjectEntry root;
 
 
-  protected JObject(NavigableMap<String, Node> map, Node root) {
-    myMap = map;
-    this.root = root;
+  /**
+   * Create a new JObject holding a deep copy of the supplied map.
+   *
+   * @param map      the map to copy
+   * @param deepCopy if true, create a deep copy of the values
+   */
+  protected JObject(NavigableMap<String, JObjectEntry> map, boolean deepCopy) {
+    this.root = null;
+    if (deepCopy) {
+      myMap = new TreeMap<>();
+      map.forEach((k, v) -> myMap.put(k, v.copy()));
+    } else {
+      myMap = map;
+    }
   }
 
 
   protected JObject(Iterator<Entry<String, Primitive>> iterator) {
     myMap = new TreeMap<>(CODE_POINT_ORDER);
-    root = new Node();
+    root = new JObjectEntry();
 
     while (iterator.hasNext()) {
       Entry<String, Primitive> e = iterator.next();
@@ -604,7 +132,7 @@ public class JObject implements JsonObject, Primitive {
 
   public JObject() {
     myMap = new TreeMap<>(CODE_POINT_ORDER);
-    root = new Node();
+    root = new JObjectEntry();
   }
 
 
@@ -615,7 +143,7 @@ public class JObject implements JsonObject, Primitive {
    */
   public JObject(Map<String, ?> map) {
     myMap = new TreeMap<>(CODE_POINT_ORDER);
-    root = new Node();
+    root = new JObjectEntry();
     for (Entry<String, ?> e : map.entrySet()) {
       put(e.getKey(), Primitive.create(e.getValue()));
     }
@@ -636,15 +164,14 @@ public class JObject implements JsonObject, Primitive {
 
   @Override
   public Primitive compute(String key, @Nonnull BiFunction<? super String, ? super JsonValue, ? extends JsonValue> remappingFunction) {
-    Node node = myMap.get(key);
+    JObjectEntry node = myMap.get(key);
 
     // Update value of existing node
     if (node != null) {
-      JsonValue newValue = remappingFunction.apply(key, node.value);
+      JsonValue newValue = remappingFunction.apply(key, node.getValue());
       if (newValue != null) {
-        Primitive primitive = Primitive.cast(newValue);
-        node.value = primitive;
-        return primitive;
+        node.setValue(newValue);
+        return node.getValue();
       }
 
       // remove node
@@ -667,15 +194,14 @@ public class JObject implements JsonObject, Primitive {
 
   @Override
   public Primitive computeIfPresent(String key, @Nonnull BiFunction<? super String, ? super JsonValue, ? extends JsonValue> remappingFunction) {
-    Node node = myMap.get(key);
+    JObjectEntry node = myMap.get(key);
 
     // Update value of existing node
     if (node != null) {
-      JsonValue newValue = remappingFunction.apply(key, node.value);
+      JsonValue newValue = remappingFunction.apply(key, node.getValue());
       if (newValue != null) {
-        Primitive primitive = Primitive.cast(newValue);
-        node.value = primitive;
-        return primitive;
+        node.setValue(newValue);
+        return node.getValue();
       }
 
       // remove node
@@ -696,22 +222,27 @@ public class JObject implements JsonObject, Primitive {
 
   @Override
   public boolean containsValue(Object value) {
-    Node node = new Node();
-    node.value = Primitive.cast(value);
-    return myMap.containsValue(node);
+    return values().contains(value);
   }
 
 
   @Override
   public JObject copy() {
-    return new JObject(myMap, true);
+    JObject newCopy;
+    if (root != null) {
+      newCopy = new JObject();
+      JObjectEntry.copyInto(newCopy, root);
+    } else {
+      newCopy = new JObject(myMap, true);
+    }
+    return newCopy;
   }
 
 
   @Override
   @Nonnull
   public Set<Entry<String, JsonValue>> entrySet() {
-    return new MyEntries(myMap.entrySet());
+    return new JObjectEntries(myMap.entrySet());
   }
 
 
@@ -720,22 +251,30 @@ public class JObject implements JsonObject, Primitive {
     if (o == this) {
       return true;
     }
+    if (o instanceof JObject) {
+      return myMap.equals(((JObject) o).myMap);
+    }
     if (!(o instanceof Map<?, ?>)) {
       return false;
     }
-    return myMap.equals(o);
-  }
 
-
-  @Override
-  public void forEach(BiConsumer<? super String, ? super JsonValue> action) {
-    myMap.forEach(action);
+    Map<?, ?> otherMap = (Map<?, ?>) o;
+    if (size() != otherMap.size()) {
+      return false;
+    }
+    return myMap.values().stream().allMatch(e -> {
+      Object otherValue = otherMap.get(e.getKey());
+      if (otherValue != null) {
+        return e.getValue().equals(otherValue);
+      }
+      return e.getValue().equals(JsonValue.NULL) && otherMap.containsKey(e.getKey());
+    });
   }
 
 
   @Override
   public Primitive get(Object key) {
-    return myMap.get(key);
+    return nn(myMap.get(key));
   }
 
 
@@ -1156,7 +695,8 @@ public class JObject implements JsonObject, Primitive {
   @Override
   public JsonValue getOrDefault(Object key, JsonValue defaultValue) {
     //noinspection SuspiciousMethodCalls
-    return myMap.getOrDefault(key, Primitive.cast(defaultValue));
+    JObjectEntry entry = myMap.get(key);
+    return entry != null ? entry.getValue() : defaultValue;
   }
 
 
@@ -1313,14 +853,13 @@ public class JObject implements JsonObject, Primitive {
   }
 
 
-  @Override
-  public JsonValue merge(
-      String key,
-      @Nonnull JsonValue value,
-      @Nonnull BiFunction<? super JsonValue, ? super JsonValue, ? extends JsonValue> remappingFunction
-  ) {
-    final BinaryOperator<Primitive> myFunction = (v1, v2) -> Primitive.cast(remappingFunction.apply(v1, v2));
-    return myMap.merge(key, Primitive.cast(value), myFunction);
+  /**
+   * Create a navigable view on this.
+   *
+   * @return a navigable view
+   */
+  public JNavigableObject navigableView() {
+    return new JNavigableObject(myMap);
   }
 
 
@@ -1457,7 +996,7 @@ public class JObject implements JsonObject, Primitive {
    * @param values the unique values
    */
   void optimiseStorage(HashMap<Primitive, Primitive> values) {
-    for (Entry<String, Primitive> e : myMap.entrySet()) {
+    for (JObjectEntry e : myMap.values()) {
       Primitive current = e.getValue();
       switch (current.getValueType()) {
         case ARRAY:
@@ -1481,12 +1020,13 @@ public class JObject implements JsonObject, Primitive {
 
   @Override
   public JsonValue put(String key, JsonValue value) {
-    return myMap.put(key, Primitive.cast(value));
+    return put(key, Primitive.cast(value));
   }
 
 
   public Primitive put(String key, Primitive value) {
-    return myMap.put(key, value);
+    JObjectEntry entry = myMap.computeIfAbsent(key, k -> new JObjectEntry(root, k));
+    return entry.setValue(value);
   }
 
 
@@ -1591,20 +1131,16 @@ public class JObject implements JsonObject, Primitive {
 
 
   @Override
-  public JsonValue putIfAbsent(String key, JsonValue value) {
-    return myMap.putIfAbsent(key, Primitive.cast(value));
-  }
-
-
-  @Override
   public Primitive remove(Object key) {
-    return myMap.remove(key);
-  }
+    JObjectEntry entry = myMap.remove(key);
+    if (entry != null) {
+      // found and removed, so unlink
+      entry.remove();
+      return entry.getValue();
+    }
 
-
-  @Override
-  public boolean remove(Object key, Object value) {
-    return myMap.remove(key, value);
+    // was not present
+    return null;
   }
 
 
@@ -1712,25 +1248,6 @@ public class JObject implements JsonObject, Primitive {
 
 
   @Override
-  public boolean replace(String key, JsonValue oldValue, JsonValue newValue) {
-    return myMap.replace(key, Primitive.cast(oldValue), Primitive.cast(newValue));
-  }
-
-
-  @Override
-  public JsonValue replace(String key, JsonValue value) {
-    return myMap.replace(key, Primitive.cast(value));
-  }
-
-
-  @Override
-  public void replaceAll(BiFunction<? super String, ? super JsonValue, ? extends JsonValue> function) {
-    final BiFunction<String, Primitive, Primitive> myFunction = (k, v) -> Primitive.cast(function.apply(k, v));
-    myMap.replaceAll(myFunction);
-  }
-
-
-  @Override
   public int size() {
     return myMap.size();
   }
@@ -1758,7 +1275,13 @@ public class JObject implements JsonObject, Primitive {
   @Override
   @Nonnull
   public Collection<JsonValue> values() {
-    return new MyValues(myMap.values());
+    return new JObjectValues(myMap.values());
+  }
+
+
+  public JObject withInsertOrder() {
+    // TODO
+    return null;
   }
 
 

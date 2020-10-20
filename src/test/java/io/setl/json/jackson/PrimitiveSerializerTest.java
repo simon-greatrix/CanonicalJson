@@ -9,7 +9,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import io.setl.json.JArray;
-import io.setl.json.JNavigableObject;
 import io.setl.json.JObject;
 import io.setl.json.Primitive;
 import io.setl.json.jackson.objects.Car;

@@ -11,7 +11,6 @@ import javax.json.stream.JsonParser;
 import javax.json.stream.JsonParsingException;
 
 import io.setl.json.JArray;
-import io.setl.json.JNavigableObject;
 import io.setl.json.JObject;
 import io.setl.json.Primitive;
 import io.setl.json.io.Input;

@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitorWrappe
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import org.junit.Test;
 
-import io.setl.json.JNavigableObject;
+import io.setl.json.structure.JNavigableObject;
 import io.setl.json.JObject;
 
 /**

@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ValueNode;
 
 import io.setl.json.JArray;
-import io.setl.json.JNavigableObject;
 import io.setl.json.JObject;
 import io.setl.json.primitive.PFalse;
 import io.setl.json.primitive.PNull;
