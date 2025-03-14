@@ -1,7 +1,6 @@
 package io.setl.json.patch;
 
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Iterator;
 import java.util.List;
 
@@ -125,8 +124,7 @@ public class PatchBuilder implements JsonPatchBuilder, Iterable<PatchOperation> 
    * @return the builder
    */
   public JsonPatchBuilder digest(@Nonnull String path, @Nullable String algorithm, @Nullable JsonValue value) {
-    byte[] hash = Test.digest(algorithm, value);
-    operationList.add(Test.testDigest(PointerFactory.create(path), algorithm + "=" + Base64.getUrlEncoder().encodeToString(hash)));
+    operationList.add(Test.testDigest(PointerFactory.create(path), algorithm, value));
     return this;
   }
 

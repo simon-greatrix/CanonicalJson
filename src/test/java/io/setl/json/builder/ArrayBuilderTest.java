@@ -6,18 +6,18 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+
 import jakarta.json.JsonArray;
 import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonObjectBuilder;
 import jakarta.json.JsonValue;
 import jakarta.json.JsonValue.ValueType;
-
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Simon Greatrix on 10/01/2020.
  */
-public class CJArrayBuilderTest {
+public class ArrayBuilderTest {
 
   ArrayBuilder builder = new ArrayBuilder();
 
@@ -293,6 +293,25 @@ public class CJArrayBuilderTest {
   @Test
   public void testToString() {
     assertNotNull(builder.toString());
+  }
+
+
+  @Test
+  public void toCanonicalString() {
+    builder.add(1000000).add(2000000).add(3000000).add(4000000);
+    assertEquals("[1000000,2000000,3000000,4000000]", builder.toCanonicalString());
+  }
+
+
+  @Test
+  public void toPrettyString() {
+    builder.add(1000000).add(2000000).add(3000000).add(4000000);
+    assertEquals("[\n"
+        + "  1000000,\n"
+        + "  2000000,\n"
+        + "  3000000,\n"
+        + "  4000000\n"
+        + "]", builder.toPrettyString());
   }
 
 }

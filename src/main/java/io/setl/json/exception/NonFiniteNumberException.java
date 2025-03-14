@@ -74,15 +74,13 @@ public class NonFiniteNumberException extends ArithmeticException {
    */
   public CJString getRepresentation() {
     switch (getType()) {
-      case NAN:
-        return REP_NAN;
       case NEGATIVE_INFINITY:
         return REP_NEG_INFINITY;
       case POSITIVE_INFINITY:
         return REP_INFINITY;
       default:
-        // Can't happen
-        throw new IllegalStateException("Unknown Non-finite type " + getType());
+        // Must be NaN
+        return REP_NAN;
     }
   }
 

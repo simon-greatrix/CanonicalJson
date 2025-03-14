@@ -5,6 +5,7 @@ import java.util.Base64;
 import java.util.Objects;
 
 import jakarta.annotation.Nonnull;
+import jakarta.json.JsonObject;
 import jakarta.json.JsonStructure;
 import jakarta.json.JsonValue;
 
@@ -31,39 +32,33 @@ class TestDigest extends Test {
 
   private final String algorithm;
 
-  private final String digest;
+  private final JsonObject digest;
 
   private final byte[] expected;
 
 
-  /**
-   * New instance for a value comparison.
-   *
-   * @param pointer the path to test
-   * @param digest  the digest the value must have
-   */
-  TestDigest(@Nonnull JsonExtendedPointer pointer, @Nonnull String digest) {
-    super(pointer);
-    this.digest = Objects.requireNonNull(digest, "Test digest must not be null");
-    Object[] parsed = parseDigest(digest);
-    algorithm = (String) parsed[0];
-    expected = (byte[]) parsed[1];
+  TestDigest(String path, String algorithm, String value) {
+    super(path);
+    this.algorithm = Objects.requireNonNull(algorithm, "Algorithm must be specified");
+    expected = Base64.getUrlDecoder().decode(Objects.requireNonNull(value, "Value must be specified"));
+    digest = new ObjectBuilder().add("algorithm", algorithm).add("value", value).build();
   }
 
 
-  /**
-   * New instance for a value comparison.
-   *
-   * @param path   the path to test
-   * @param digest the digest the value must have
-   */
-  TestDigest(@Nonnull String path, @Nonnull String digest) {
+  TestDigest(String path, String algorithm, byte[] value) {
     super(path);
-    this.digest = Objects.requireNonNull(digest, "Test digest must not be null");
+    this.algorithm = Objects.requireNonNull(algorithm, "Algorithm must be specified");
+    expected = Objects.requireNonNull(value, "Value must be specified");
+    digest = new ObjectBuilder().add("algorithm", algorithm).add("value", Base64.getUrlEncoder().encodeToString(value)).build();
+  }
 
-    Object[] parsed = parseDigest(digest);
-    algorithm = (String) parsed[0];
-    expected = (byte[]) parsed[1];
+
+  TestDigest(JsonExtendedPointer pointer, String algorithm, byte[] value) {
+    super(pointer);
+    this.algorithm = Objects.requireNonNull(algorithm, "Algorithm must be specified");
+    expected = Objects.requireNonNull(value, "Value must be specified");
+    digest = new ObjectBuilder().add("algorithm", algorithm).add("value", Base64.getUrlEncoder().encodeToString(value)).build();
+
   }
 
 
@@ -72,7 +67,7 @@ class TestDigest extends Test {
     JsonValue jsonValue = pointer.getValue(target);
     byte[] actual = digest(algorithm, jsonValue);
     if (!MessageDigest.isEqual(expected, actual)) {
-      throw new IncorrectDigestException("Test failed. Digest for " + getPath() + " is \"" + Base64.getUrlEncoder().encodeToString(actual) + "\".");
+      throw new IncorrectDigestException("Test failed. Digest for \"" + getPath() + "\" is \"" + Base64.getUrlEncoder().encodeToString(actual) + "\".");
     }
 
     return target;
@@ -90,7 +85,7 @@ class TestDigest extends Test {
    *
    * @return the expected digest
    */
-  public String getDigest() {
+  public JsonValue getDigest() {
     return digest;
   }
 

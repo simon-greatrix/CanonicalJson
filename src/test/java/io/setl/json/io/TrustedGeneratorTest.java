@@ -76,6 +76,7 @@ public class TrustedGeneratorTest {
   private void jioe(Executable ex) {
     JsonIOException e = assertThrows(JsonIOException.class, ex);
     assertEquals("test", e.getCause().getMessage());
+    assertEquals("test", e.cause().getMessage());
   }
 
 

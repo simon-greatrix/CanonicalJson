@@ -12,7 +12,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.json.JsonException;
+import jakarta.json.JsonObject;
 import jakarta.json.JsonPatch.Operation;
 import jakarta.json.JsonValue;
 
@@ -61,7 +63,7 @@ public abstract class Test extends PatchOperation {
   public static Test create(
       @JsonProperty("path") String path,
       @JsonProperty("value") JsonValue value,
-      @JsonProperty("digest") String digest,
+      @JsonProperty("digest") JsonObject digest,
       @JsonProperty("resultOfAdd") ResultOfAdd resultOfAdd
   ) {
     int flags = 0;
@@ -78,7 +80,7 @@ public abstract class Test extends PatchOperation {
       case 1:
         return new TestValue(path, value);
       case 2:
-        return new TestDigest(path, digest);
+        return new TestDigest(path, digest.getString("algorithm"), digest.getString("value"));
       case 4:
         return new TestResult(path, resultOfAdd);
       default:
@@ -101,7 +103,7 @@ public abstract class Test extends PatchOperation {
     return create(
         object.getString("path"),
         object.optJsonValue("value"),
-        object.optString("digest"),
+        object.optObject("digest"),
         result
     );
   }
@@ -134,28 +136,36 @@ public abstract class Test extends PatchOperation {
 
 
   /**
-   * Create a test that verifies the digest of the JSON structure indicated by the path. The digest is specified as
+   * Create a test that verifies the digest of the JSON structure indicated by the path.
    *
-   * @param path   the path
-   * @param digest the digest
+   * @param path      the path
+   * @param algorithm the digest algorithm
+   * @param value     the value to digest
    *
    * @return the test
    */
-  public static Test testDigest(String path, String digest) {
-    return new TestDigest(path, digest);
+  public static Test testDigest(@Nonnull String path, @Nullable String algorithm, @Nullable JsonValue value) {
+    if (algorithm == null || algorithm.isEmpty()) {
+      algorithm = DEFAULT_DIGEST;
+    }
+    return new TestDigest(path, algorithm, digest(algorithm, value));
   }
 
 
   /**
    * Create a test that verifies the digest of the JSON structure indicated by the pointer.
    *
-   * @param pointer the pointer
-   * @param digest  the digest
+   * @param pointer   the pointer
+   * @param algorithm the digest algorithm
+   * @param value     the value to digest
    *
    * @return the test
    */
-  public static Test testDigest(JsonExtendedPointer pointer, String digest) {
-    return new TestDigest(pointer, digest);
+  public static Test testDigest(@Nonnull JsonExtendedPointer pointer, @Nullable String algorithm, @Nullable JsonValue value) {
+    if (algorithm == null || algorithm.isEmpty()) {
+      algorithm = DEFAULT_DIGEST;
+    }
+    return new TestDigest(pointer, algorithm, digest(algorithm, value));
   }
 
 
@@ -251,7 +261,7 @@ public abstract class Test extends PatchOperation {
    *
    * @return the expected digest
    */
-  public String getDigest() {
+  public JsonValue getDigest() {
     return null;
   }
 

@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Simon Greatrix on 10/01/2020.
  */
-public class CJObjectBuilderTest {
+public class ObjectBuilderTest {
 
   private ObjectBuilder builder = new ObjectBuilder();
 
@@ -120,4 +120,23 @@ public class CJObjectBuilderTest {
     assertNotNull(builder.toString());
   }
 
+
+
+  @Test
+  public void toCanonicalString() {
+    builder.add("a",1000000).add("b",2000000).add("c",3000000).add("d",4000000);
+    assertEquals("{\"a\":1000000,\"b\":2000000,\"c\":3000000,\"d\":4000000}", builder.toCanonicalString());
+  }
+
+
+  @Test
+  public void toPrettyString() {
+    builder.add("a",1000000).add("b",2000000).add("c",3000000).add("d",4000000);
+    assertEquals("{\n"
+        + "  \"a\": 1000000,\n"
+        + "  \"b\": 2000000,\n"
+        + "  \"c\": 3000000,\n"
+        + "  \"d\": 4000000\n"
+        + "}", builder.toPrettyString());
+  }
 }
