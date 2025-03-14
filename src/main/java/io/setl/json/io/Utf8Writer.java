@@ -3,7 +3,7 @@ package io.setl.json.io;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 /**
  * An OutputStream writer which uses UTF-8 encoding.

@@ -33,7 +33,7 @@ The providers are thread safe and re-usable. It is recommended that the instance
 
 UTF-8 encoding is assumed.
 
-```java
+```
     JsonObject myData;
     File file=new File("my-data.json");
     try(JsonReader reader=provider.createReader(new FileInputStream(file))) {
@@ -49,7 +49,7 @@ Json parsers normally share the restriction on readers that they can only read a
 
 UTF-8 encoding is assumed.
 
-```java
+```
     JsonParserFactory factory=provider.createParserFactory(
       Map.of(ParserFactory.REQUIRE_SINGLE_ROOT,false)
     );
@@ -65,7 +65,7 @@ UTF-8 encoding is assumed.
 
 ### Writing a JSON Object to a file
 
-```java
+```
     JsonObject myData = ...;
     File file = new File("my-data.json");
     try(JsonWriter writer = provider.createWriter(new FileOutputStream(file))) {
@@ -77,22 +77,20 @@ UTF-8 encoding is assumed.
 
 Generating secure digests is supported as part of the "patch" operations.
 
-```java
-
+```
     byte[] digest = Test.digest("SHA-512/256",myJsonValue);
-
 ```
 
 ### Generating canonical JSON with Jackson
 
-```java
+```
     ObjectMapper objectMapper = new ObjectMapper(new CanonicalFactory());
     String json = objectMapper.writeValueAsString(myPojo); 
 ```
 
 ### Generating `javax.json` from Jackson
 
-```java
+```
     JsonStructure structure = (JsonStructure) Convert.toJson(objectMapper.<JsonNode>valueToTree(object));
 ```
 
@@ -102,14 +100,14 @@ The canonical format has no additional whitespace and can be difficult to read.
 
 #### Setting the behaviour of `toString`
 
-```java
+```
     // All toString will produce "pretty" output
     CanonicalJsonProvider.setIsToPrettyString(true);
 ```
 
 #### Pretty printing a single value
 
-```java
+```
     // myData is a map, collection, number, Boolean, or String
     Canonical.toPrettyString( Canonical.cast( myData ) );
 ```
@@ -118,8 +116,7 @@ The canonical format has no additional whitespace and can be difficult to read.
 
 The `CJObject` and `CJArray` classes can be created directly and offer an extended API for manipulating the data structure.
 
-```java
-
+```
   JsonObject json = provider.createObjectBuilder()
       .add("age",21)
       .add("species","cat")
@@ -133,7 +130,7 @@ The `CJObject` and `CJArray` classes can be created directly and offer an extend
 The canonical JSON format specifies that integer values be expressed in full without use of the exponential form. This opens a vulnerability for an 
 asynchronous attack. A JSON of the form:
 
-```java
+```json
 {
   "bad number" : 1E+10000000
 }

@@ -1,7 +1,7 @@
 package io.setl.json.pointer;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.json.JsonPointer;
 import jakarta.json.JsonStructure;
 import jakarta.json.JsonValue;

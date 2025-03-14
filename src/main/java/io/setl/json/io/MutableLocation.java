@@ -5,7 +5,7 @@ package io.setl.json.io;
  *
  * <p>The stream offset refers to the character position in the stream, not the byte position.</p>
  *
- * <p>The column and line numbers are provided as a best effort and may not match a visual representation of the data.</p>
+ * <p>The column and line numbers are provided as a best-effort and may not match a visual representation of the data.</p>
  *
  * <p>Tabs are allowed as whitespace between JSON elements. Tabs increment the column count as if there were an 8 character tab-stop.</p>
  *

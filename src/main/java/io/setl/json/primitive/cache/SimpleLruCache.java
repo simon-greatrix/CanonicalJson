@@ -4,7 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 /**
  * A very simple LRU cache based on LinkedHashMap. The cache can only be accessed by one thread at a time.

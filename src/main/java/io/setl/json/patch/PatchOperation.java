@@ -2,9 +2,7 @@ package io.setl.json.patch;
 
 import java.util.ArrayList;
 import java.util.List;
-import jakarta.json.JsonArray;
-import jakarta.json.JsonPatch.Operation;
-import jakarta.json.JsonStructure;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,6 +11,10 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
+import jakarta.annotation.Nonnull;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonPatch.Operation;
+import jakarta.json.JsonStructure;
 
 import io.setl.json.CJObject;
 import io.setl.json.FormattedJson;
@@ -79,7 +81,7 @@ public abstract class PatchOperation implements FormattedJson {
           operations.add(new Replace(jsonObject));
           break;
         case "test":
-          operations.add(new Test(jsonObject));
+          operations.add(Test.create(jsonObject));
           break;
         default:
           throw new InvalidPatchException("Unknown operation: \"" + op + "\"");
@@ -100,8 +102,8 @@ public abstract class PatchOperation implements FormattedJson {
    *
    * @param path the path
    */
-  protected PatchOperation(String path) {
-    this.path = path;
+  protected PatchOperation(@Nonnull String path) {
+    this.path = Objects.requireNonNull(path, "path must be specified");
     pointer = PointerFactory.create(path);
   }
 
@@ -111,8 +113,8 @@ public abstract class PatchOperation implements FormattedJson {
    *
    * @param pointer the pointer
    */
-  protected PatchOperation(JsonExtendedPointer pointer) {
-    path = pointer.getPath();
+  protected PatchOperation(@Nonnull JsonExtendedPointer pointer) {
+    path = Objects.requireNonNull(pointer, "pointer must be specified").getPath();
     this.pointer = pointer;
   }
 
@@ -122,7 +124,7 @@ public abstract class PatchOperation implements FormattedJson {
    *
    * @param object the JSON object that specifies the operation
    */
-  protected PatchOperation(CJObject object) {
+  protected PatchOperation(@Nonnull CJObject object) {
     this(object.getString("path"));
   }
 
