@@ -2,8 +2,21 @@ package io.setl.json.jackson;
 
 import java.io.IOException;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Function;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ContainerNode;
+import com.fasterxml.jackson.databind.node.JsonNodeCreator;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ValueNode;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonException;
 import jakarta.json.JsonNumber;
@@ -11,14 +24,6 @@ import jakarta.json.JsonObject;
 import jakarta.json.JsonString;
 import jakarta.json.JsonStructure;
 import jakarta.json.JsonValue;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ContainerNode;
-import com.fasterxml.jackson.databind.node.JsonNodeCreator;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.ValueNode;
 
 import io.setl.json.CJArray;
 import io.setl.json.CJObject;
@@ -34,6 +39,9 @@ import io.setl.json.primitive.numbers.CJNumber;
  * @author Simon Greatrix on 26/02/2020.
  */
 public class Convert {
+
+  private static final Map<JsonNodeType, Function<JsonNode, JsonValue>> CONVERTERS;
+
 
   private static ArrayNode createArrayNode(JsonNodeCreator nodeCreator, JsonArray jsonArray) {
     ArrayNode arrayNode = nodeCreator.arrayNode(jsonArray.size());
@@ -223,33 +231,49 @@ public class Convert {
    * @return the equivalent JsonValue
    */
   public static JsonValue toJson(JsonNode node) {
-    switch (node.getNodeType()) {
-      case OBJECT:
-        return createJsonObject((ObjectNode) node);
-      case ARRAY:
-        return createJsonArray((ArrayNode) node);
-      case STRING:
-        return CJString.create(node.textValue());
-      case BOOLEAN:
-        return node.booleanValue() ? CJTrue.TRUE : CJFalse.FALSE;
-      case NULL:
-        return CJNull.NULL;
-      case NUMBER:
-        return CJNumber.cast(node.numberValue());
-      case BINARY:
-        try {
-          return CJString.create(Base64.getEncoder().encodeToString(node.binaryValue()));
-        } catch (IOException ioe) {
-          throw new JsonException("Jackson failure", ioe);
-        }
-      case POJO:
-        throw new JsonException("Jackson POJO nodes are not supported");
-      case MISSING:
-        throw new JsonException("Jackson MISSING nodes are not supported");
-      default:
-        // should be unreachable
-        throw new JsonException("Unknown Jackson node type: " + node.getNodeType());
+    Function<JsonNode, JsonValue> converter = CONVERTERS.get(node.getNodeType());
+    if (converter != null) {
+      return converter.apply(node);
     }
+
+    // should be unreachable
+    throw new JsonException("Unknown Jackson node type: " + node.getNodeType());
+  }
+
+
+  static {
+    // Map node types to the functions that convert the Jackson node to a javax value
+    Map<JsonNodeType, Function<JsonNode, JsonValue>> map = new EnumMap<>(JsonNodeType.class);
+    map.put(JsonNodeType.OBJECT, n -> createJsonObject((ObjectNode) n));
+    map.put(JsonNodeType.ARRAY, n -> createJsonArray((ArrayNode) n));
+    map.put(JsonNodeType.STRING, n -> CJString.create(n.textValue()));
+    map.put(JsonNodeType.BOOLEAN, n -> n.booleanValue() ? CJTrue.TRUE : CJFalse.FALSE);
+    map.put(JsonNodeType.NULL, n -> CJNull.NULL);
+    map.put(JsonNodeType.NUMBER, n -> CJNumber.cast(n.numberValue()));
+
+    map.put(
+        JsonNodeType.BINARY, n -> {
+          try {
+            return CJString.create(Base64.getEncoder().encodeToString(n.binaryValue()));
+          } catch (IOException ioe) {
+            throw new JsonException("Jackson failure", ioe);
+          }
+        }
+    );
+
+    // Unsupported types
+    map.put(
+        JsonNodeType.POJO, n -> {
+          throw new JsonException("Jackson POJO nodes are not supported");
+        }
+    );
+    map.put(
+        JsonNodeType.MISSING, n -> {
+          throw new JsonException("Jackson MISSING nodes are not supported");
+        }
+    );
+
+    CONVERTERS = Collections.unmodifiableMap(map);
   }
 
 

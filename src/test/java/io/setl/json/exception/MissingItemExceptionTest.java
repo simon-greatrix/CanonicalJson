@@ -2,11 +2,11 @@ package io.setl.json.exception;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.EnumSet;
-import jakarta.json.JsonValue.ValueType;
 
+import jakarta.json.JsonValue.ValueType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -37,13 +37,7 @@ public class MissingItemExceptionTest {
 
   @Test
   public void testArray() {
-    MissingItemException e = null;
-    try {
-      array.getString(-5);
-      fail();
-    } catch (MissingItemException e2) {
-      e = e2;
-    }
+    MissingItemException e = assertThrows(MissingItemException.class, () -> array.getString(-5));
 
     assertEquals(-5, e.getIndex());
     assertNull(e.getKey());
@@ -53,13 +47,7 @@ public class MissingItemExceptionTest {
 
   @Test
   public void testObject() {
-    MissingItemException e = null;
-    try {
-      object.getString("missing");
-      fail();
-    } catch (MissingItemException e2) {
-      e = e2;
-    }
+    MissingItemException e = assertThrows(MissingItemException.class, () -> object.getString("missing"));
 
     assertEquals(-1, e.getIndex());
     assertEquals("missing", e.getKey());

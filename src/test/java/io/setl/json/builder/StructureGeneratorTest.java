@@ -1,9 +1,12 @@
 package io.setl.json.builder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+
+import jakarta.json.JsonArray;
 import jakarta.json.JsonValue;
 
 import org.junit.jupiter.api.Test;
@@ -98,8 +101,21 @@ class StructureGeneratorTest {
 
   @Test
   void flush() {
+    // flush does nothing.
+    StructureGenerator.newObject().end().flush();
   }
 
+  @Test
+  void nested() {
+    StructureGenerator<CJArray> generator = StructureGenerator.newArray().value(1);
+    CJArray a1 = generator.build();
+    assertEquals("[1]", a1.toCanonicalString());
+    assertSame(a1,generator.build());
+    generator = StructureGenerator.newArray().value(1).end();
+    a1 = generator.build();
+    assertEquals("[1]", a1.toCanonicalString());
+    assertSame(a1,generator.build());
+  }
 
   @Test
   void key() {

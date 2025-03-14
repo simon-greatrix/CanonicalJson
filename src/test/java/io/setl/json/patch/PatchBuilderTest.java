@@ -43,7 +43,7 @@ public class PatchBuilderTest {
         + "{\"op\":\"add\",\"path\":\"/a/b/c/3\",\"value\":1},"
         + "{\"op\":\"add\",\"path\":\"/a/b/c/4\",\"value\":true},"
         + "{\"from\":\"/a/b/ex2\",\"op\":\"copy\",\"path\":\"/a/b/ex1\"},"
-        + "{\"digest\":\"SHA-256=zILrvPi2Clgh0cUccs15OA7OpH3jQ8yzsViTiis792Q=\",\"op\":\"test\",\"path\":\"/a/b/c\"},"
+        + "{\"digest\":{\"algorithm\":\"SHA-256\",\"value\":\"zILrvPi2Clgh0cUccs15OA7OpH3jQ8yzsViTiis792Q=\"},\"op\":\"test\",\"path\":\"/a/b/c\"},"
         + "{\"from\":\"/a/y\",\"op\":\"move\",\"path\":\"/a/x\"},"
         + "{\"op\":\"remove\",\"path\":\"/c/d\"},"
         + "{\"op\":\"replace\",\"path\":\"/x/1\",\"value\":\"/y\"},"

@@ -1,17 +1,20 @@
 package io.setl.json.jackson;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.Map;
+
+import com.fasterxml.jackson.core.JsonLocation;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.TreeNode;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonReader;
 import jakarta.json.JsonStructure;
 import jakarta.json.JsonValue;
 import jakarta.json.stream.JsonParsingException;
-
-import com.fasterxml.jackson.core.JsonLocation;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.core.TreeNode;
 
 import io.setl.json.CJArray;
 import io.setl.json.CJObject;
@@ -29,6 +32,34 @@ import io.setl.json.primitive.numbers.CJNumber;
  * @author Simon Greatrix on 31/01/2020.
  */
 public class JacksonReader implements JsonReader {
+
+  private static final Map<JsonToken, ReaderLambda> VALUE_READERS;
+
+  /** A lambda function that reads a value from the parser. */
+  @FunctionalInterface
+  private interface ReaderLambda {
+
+    /** Read the value. */
+    JsonValue read(JacksonReader reader) throws IOException;
+
+  }
+
+  static {
+    EnumMap<JsonToken, ReaderLambda> map = new EnumMap<>(JsonToken.class);
+    map.put(JsonToken.START_ARRAY, JacksonReader::doReadArray);
+    map.put(JsonToken.START_OBJECT, r -> r.doReadObject(true));
+    map.put(JsonToken.FIELD_NAME, r -> r.doReadObject(false));
+    map.put(JsonToken.END_OBJECT, r -> JsonValue.EMPTY_JSON_OBJECT);
+    map.put(JsonToken.END_ARRAY, r -> JsonValue.EMPTY_JSON_ARRAY);
+    map.put(JsonToken.VALUE_FALSE, r -> CJFalse.FALSE);
+    map.put(JsonToken.VALUE_TRUE, r -> CJTrue.TRUE);
+    map.put(JsonToken.VALUE_NULL, r -> CJNull.NULL);
+    map.put(JsonToken.VALUE_STRING, r -> CJString.create(r.jsonParser.getText()));
+    map.put(JsonToken.VALUE_EMBEDDED_OBJECT, r -> CJString.create(r.jsonParser.getText()));
+    map.put(JsonToken.VALUE_NUMBER_INT, JacksonReader::parseNumber);
+    map.put(JsonToken.VALUE_NUMBER_FLOAT, r -> CJNumber.cast(r.jsonParser.getDecimalValue()));
+    VALUE_READERS = Collections.unmodifiableMap(map);
+  }
 
   private final JsonParser jsonParser;
 
@@ -114,34 +145,13 @@ public class JacksonReader implements JsonReader {
     if (token == null) {
       throw new JsonParsingException("Value not found", getLocation());
     }
-    switch (token) {
-      case START_ARRAY:
-        return doReadArray();
-      case START_OBJECT:
-        return doReadObject(true);
-      case FIELD_NAME:
-        return doReadObject(false);
-      case END_OBJECT:
-        return JsonValue.EMPTY_JSON_OBJECT;
-      case END_ARRAY:
-        return JsonValue.EMPTY_JSON_ARRAY;
-      case VALUE_FALSE:
-        return CJFalse.FALSE;
-      case VALUE_TRUE:
-        return CJTrue.TRUE;
-      case VALUE_NULL:
-        return CJNull.NULL;
-      case VALUE_STRING:
-      case VALUE_EMBEDDED_OBJECT:
-        return CJString.create(jsonParser.getText());
-      case VALUE_NUMBER_INT:
-        return parseNumber();
-      case VALUE_NUMBER_FLOAT:
-        return CJNumber.cast(jsonParser.getDecimalValue());
-      default:
-        // Reachable if the encoding uses stuff beyond JSON like embedded objects and reference IDs
-        throw new IllegalStateException("Unhandled token from Jackson: " + token);
+    ReaderLambda reader = VALUE_READERS.get(token);
+    if (reader != null) {
+      return reader.read(this);
     }
+
+    // Reachable if the encoding uses stuff beyond JSON like embedded objects and reference IDs
+    throw new IllegalStateException("Unhandled token from Jackson: " + token);
   }
 
 

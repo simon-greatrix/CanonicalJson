@@ -2,16 +2,20 @@ package io.setl.json.exception;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.EnumSet;
-import jakarta.json.JsonValue.ValueType;
 
+import jakarta.json.JsonStructure;
+import jakarta.json.JsonValue.ValueType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import io.setl.json.CJArray;
 import io.setl.json.CJObject;
+import io.setl.json.Canonical;
+import io.setl.json.primitive.CJFalse;
 
 public class IncorrectTypeExceptionTest {
 
@@ -37,13 +41,7 @@ public class IncorrectTypeExceptionTest {
 
   @Test
   public void testArray() {
-    IncorrectTypeException e = null;
-    try {
-      array.getString(0);
-      fail();
-    } catch (IncorrectTypeException e2) {
-      e = e2;
-    }
+    IncorrectTypeException e = assertThrows(IncorrectTypeException.class, () -> array.getString(0));
 
     assertEquals(0, e.getIndex());
     assertNull(e.getKey());
@@ -54,13 +52,7 @@ public class IncorrectTypeExceptionTest {
 
   @Test
   public void testObject() {
-    IncorrectTypeException e = null;
-    try {
-      object.getString("array");
-      fail();
-    } catch (IncorrectTypeException e2) {
-      e = e2;
-    }
+    IncorrectTypeException e = assertThrows(IncorrectTypeException.class, () -> object.getString("array"));
 
     assertEquals(-1, e.getIndex());
     assertEquals("array", e.getKey());
@@ -68,4 +60,17 @@ public class IncorrectTypeExceptionTest {
     assertEquals(EnumSet.of(ValueType.STRING), e.getRequired());
   }
 
+
+  @Test
+  public void testEmpty() {
+    assertThrows(IncorrectTypeException.class, () -> Canonical.createEmpty(null));
+    assertThrows(IncorrectTypeException.class, () -> Canonical.createEmpty(
+        new JsonStructure() {
+          @Override
+          public ValueType getValueType() {
+            return ValueType.TRUE;
+          }
+        }
+    ));
+  }
 }
