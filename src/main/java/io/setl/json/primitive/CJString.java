@@ -2,7 +2,7 @@ package io.setl.json.primitive;
 
 import java.io.IOException;
 import java.util.Objects;
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 import jakarta.json.JsonString;
 
 import io.setl.json.primitive.cache.CacheManager;
@@ -143,7 +143,7 @@ public class CJString extends CJBase implements JsonString {
           buf.append(ch);
           break;
         case 1:
-          // unicode escape
+          // Unicode escape
           buf.append("\\u00").append(HEX[ch >>> 4]).append(HEX[ch & 0xf]);
           break;
         default:

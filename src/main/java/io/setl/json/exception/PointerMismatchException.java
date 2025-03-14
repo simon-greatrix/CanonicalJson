@@ -1,6 +1,6 @@
 package io.setl.json.exception;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import jakarta.json.JsonException;
 import jakarta.json.JsonValue.ValueType;
 

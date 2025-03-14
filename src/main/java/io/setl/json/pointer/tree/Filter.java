@@ -3,7 +3,6 @@ package io.setl.json.pointer.tree;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
 
-import io.setl.json.pointer.JsonExtendedPointer;
 import io.setl.json.pointer.PathElement;
 
 /**

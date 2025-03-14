@@ -28,15 +28,16 @@ import java.util.function.ToIntFunction;
 import java.util.function.ToLongFunction;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonNumber;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonString;
 import jakarta.json.JsonValue;
-
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import io.setl.json.CJArray.MySpliterator;
 import io.setl.json.exception.IncorrectTypeException;
@@ -176,7 +177,7 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, Ca
 
 
     @Override
-    public boolean containsAll(Collection<?> c) {
+    public boolean containsAll(@Nonnull Collection<?> c) {
       for (Object o : c) {
         if (!contains(o)) {
           return false;
@@ -232,6 +233,7 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, Ca
 
 
     @Override
+    @Nonnull
     public Stream<Entry<String, JsonValue>> parallelStream() {
       return mySet.parallelStream().map(MyEntry::new);
     }
@@ -250,7 +252,7 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, Ca
 
 
     @Override
-    public boolean removeIf(Predicate<? super Entry<String, JsonValue>> filter) {
+    public boolean removeIf(@Nonnull Predicate<? super Entry<String, JsonValue>> filter) {
       return mySet.removeIf(e -> filter.test(new MyEntry(e)));
     }
 
@@ -268,12 +270,14 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, Ca
 
 
     @Override
+    @Nonnull
     public Spliterator<Entry<String, JsonValue>> spliterator() {
       return new MyEntrySpliterator(mySet.spliterator());
     }
 
 
     @Override
+    @Nonnull
     public Stream<Entry<String, JsonValue>> stream() {
       return mySet.stream().map(MyEntry::new);
     }
@@ -483,6 +487,7 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, Ca
 
 
     @Override
+    @Nonnull
     public Stream<JsonValue> parallelStream() {
       return me.parallelStream().map(JsonValue.class::cast);
     }
@@ -501,7 +506,7 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, Ca
 
 
     @Override
-    public boolean removeIf(Predicate<? super JsonValue> filter) {
+    public boolean removeIf(@Nonnull Predicate<? super JsonValue> filter) {
       return me.removeIf(filter);
     }
 
@@ -519,12 +524,14 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, Ca
 
 
     @Override
+    @Nonnull
     public Spliterator<JsonValue> spliterator() {
       return new MySpliterator(me.spliterator());
     }
 
 
     @Override
+    @Nonnull
     public Stream<JsonValue> stream() {
       return me.stream().map(JsonValue.class::cast);
     }
@@ -545,7 +552,7 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, Ca
 
 
     @Override
-    public <T> T[] toArray(IntFunction<T[]> generator) {
+    public <T> T[] toArray(@Nonnull IntFunction<T[]> generator) {
       return me.toArray(generator);
     }
 
@@ -657,21 +664,21 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, Ca
 
 
   @Override
-  public Canonical compute(String key, BiFunction<? super String, ? super JsonValue, ? extends JsonValue> remappingFunction) {
+  public Canonical compute(String key, @Nonnull BiFunction<? super String, ? super JsonValue, ? extends JsonValue> remappingFunction) {
     final BiFunction<String, Canonical, Canonical> myFunction = (k, v) -> Canonical.cast(remappingFunction.apply(k, v));
     return myMap.compute(key, myFunction);
   }
 
 
   @Override
-  public Canonical computeIfAbsent(String key, Function<? super String, ? extends JsonValue> mappingFunction) {
+  public Canonical computeIfAbsent(String key, @Nonnull Function<? super String, ? extends JsonValue> mappingFunction) {
     final Function<String, Canonical> myFunction = k -> Canonical.cast(mappingFunction.apply(k));
     return myMap.computeIfAbsent(key, myFunction);
   }
 
 
   @Override
-  public Canonical computeIfPresent(String key, BiFunction<? super String, ? super JsonValue, ? extends JsonValue> remappingFunction) {
+  public Canonical computeIfPresent(String key, @Nonnull BiFunction<? super String, ? super JsonValue, ? extends JsonValue> remappingFunction) {
     final BiFunction<String, Canonical, Canonical> myFunction = (k, v) -> Canonical.cast(remappingFunction.apply(k, v));
     return myMap.computeIfPresent(key, myFunction);
   }
@@ -939,7 +946,7 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, Ca
     if (value instanceof Boolean) {
       return (Boolean) value;
     }
-    throw new IncorrectTypeException(key, Canonical.IS_BOOLEAN, canonical.getValueType());
+    throw new IncorrectTypeException(key, IS_BOOLEAN, canonical.getValueType());
   }
 
 
@@ -1200,7 +1207,11 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, Ca
 
   @Override
   public JsonValue getOrDefault(Object key, JsonValue defaultValue) {
-    JsonValue value = myMap.get(key);
+    if (!(key instanceof String)) {
+      return null;
+    }
+
+    JsonValue value = myMap.get((String) key);
     return value != null ? value : defaultValue;
   }
 
@@ -1765,9 +1776,10 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, Ca
    * @return the Boolean removed
    */
   @Nullable
+  @SuppressFBWarnings("NP_BOOLEAN_RETURN_NULL")
   public Boolean removeBoolean(String key) {
     Canonical canonical = getCanonical(key);
-    if (canonical == null || !Canonical.IS_BOOLEAN.contains(canonical.getValueType())) {
+    if (canonical == null || !IS_BOOLEAN.contains(canonical.getValueType())) {
       return null;
     }
     remove(key);

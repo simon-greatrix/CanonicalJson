@@ -79,7 +79,7 @@ public class CJObjectTest {
 
   @Test
   public void computeIfAbsent() {
-    json.computeIfAbsent("null", k -> JsonValue.TRUE);
+    json.putIfAbsent("null", JsonValue.TRUE);
     assertEquals(JsonValue.NULL, json.get("null"));
   }
 
@@ -360,7 +360,7 @@ public class CJObjectTest {
   @Test
   public void lastEntry() {
     Entry<String, JsonValue> e = json.lastEntry();
-    assertEquals(new SimpleEntry("\uD83D\uDE2A", CJString.create("sleepy")), e);
+    assertEquals(new SimpleEntry<>("\uD83D\uDE2A", CJString.create("sleepy")), e);
   }
 
 

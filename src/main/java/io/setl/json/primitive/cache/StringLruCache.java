@@ -1,7 +1,7 @@
 package io.setl.json.primitive.cache;
 
 import java.util.function.Function;
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 import io.setl.json.primitive.CJString;
 

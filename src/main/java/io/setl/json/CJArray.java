@@ -24,15 +24,15 @@ import java.util.function.IntUnaryOperator;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonNumber;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonString;
 import jakarta.json.JsonValue;
-
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import io.setl.json.exception.IncorrectTypeException;
 import io.setl.json.exception.MissingItemException;
@@ -357,7 +357,7 @@ public class CJArray implements JsonArray, Canonical {
 
 
   /**
-   * Addd a number to the end of this array.
+   * Add a number to the end of this array.
    *
    * @param number the number
    *
@@ -1256,6 +1256,7 @@ public class CJArray implements JsonArray, Canonical {
 
 
   @Override
+  @Nonnull
   public Stream<JsonValue> parallelStream() {
     return myList.parallelStream().map(JsonValue.class::cast);
   }
@@ -1286,13 +1287,13 @@ public class CJArray implements JsonArray, Canonical {
 
 
   @Override
-  public boolean removeIf(Predicate<? super JsonValue> filter) {
+  public boolean removeIf(@Nonnull Predicate<? super JsonValue> filter) {
     return myList.removeIf(filter);
   }
 
 
   @Override
-  public void replaceAll(UnaryOperator<JsonValue> operator) {
+  public void replaceAll(@Nonnull UnaryOperator<JsonValue> operator) {
     myList.replaceAll(p -> Canonical.cast(operator.apply(p)));
   }
 
@@ -1384,12 +1385,14 @@ public class CJArray implements JsonArray, Canonical {
 
 
   @Override
+  @Nonnull
   public Spliterator<JsonValue> spliterator() {
     return new MySpliterator(myList.spliterator());
   }
 
 
   @Override
+  @Nonnull
   public Stream<JsonValue> stream() {
     return myList.stream().map(JsonValue.class::cast);
   }
@@ -1417,7 +1420,7 @@ public class CJArray implements JsonArray, Canonical {
 
 
   @Override
-  public <T> T[] toArray(IntFunction<T[]> generator) {
+  public <T> T[] toArray(@Nonnull IntFunction<T[]> generator) {
     return myList.toArray(generator);
   }
 
