@@ -3,7 +3,7 @@ package io.setl.json.io;
 import jakarta.json.stream.JsonGenerationException;
 
 /**
- * A circular char buffer used by the PrettyFormatter to limit the expansion of small structures.
+ * A char buffer used by the PrettyFormatter to limit the expansion of small structures.
  *
  * @author Simon Greatrix on 19/11/2020.
  */
@@ -91,8 +91,6 @@ class PrettyBuffer implements PrettyOutput {
       case END_ARRAY:
       case END_OBJECT:
         throw new IllegalStateException(special + " encountered without matching start. Expected: " + endsWith);
-      case SEPARATOR:
-        return append(',').append('\u0001');
       case START_ARRAY:
         buffer = new PrettyBuffer(this, size, Special.END_ARRAY);
         buffer.append('[').append('\u0002');
@@ -102,19 +100,21 @@ class PrettyBuffer implements PrettyOutput {
         buffer.append('{').append('\u0002');
         return buffer;
       default:
-        throw new InternalError("Unrecognised enumeration: " + special);
+        // Must be a separator
+        return append(',').append('\u0001');
     }
   }
 
 
   private PrettyOutput appendCloser() {
-    char endSymbol = endsWith == Special.END_ARRAY ? ']' : '}';
+    char endSymbol = endsWith.symbol();
 
     if (pos == 2) {
       // special rule for empty structures
       return parent.append(chars[0]).append(endSymbol);
     }
 
+    // Convert whitespace markers to spaces.
     for (int i = 0; i < pos; i++) {
       if (chars[i] < 3) {
         chars[i] = ' ';
@@ -133,6 +133,7 @@ class PrettyBuffer implements PrettyOutput {
 
   @Override
   public PrettyOutput flush() {
+    // Abandon small structure.
     PrettyOutput ancestor = parent.append(chars, 0, pos);
     return ancestor.flush();
   }

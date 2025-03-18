@@ -256,6 +256,14 @@ public class SafeGeneratorTest {
     assertEquals("{\"a\":1,\"b\":[],\"c\":3}", writer.toString());
   }
 
+  @Test
+  public void testWriteObject5() {
+    generator.writeStartObject()
+        .write("a", 1)
+        .writeKey("b");
+    jge(() -> generator.writeEnd(), "Cannot end object when a key has an unwritten value");
+  }
+
 
   @Test
   public void writeBigDec() {

@@ -2,6 +2,7 @@ package io.setl.json.io;
 
 import java.io.IOException;
 
+import io.setl.json.exception.JsonIOException;
 import io.setl.json.io.PrettyOutput.Special;
 import io.setl.json.primitive.CJBase;
 import io.setl.json.primitive.CJString;
@@ -11,15 +12,16 @@ import io.setl.json.primitive.CJString;
  *
  * @author Simon Greatrix on 18/11/2020.
  */
-public class PrettyFormatter implements Formatter, Appendable {
+class PrettyFormatter implements Formatter, Appendable {
 
   /** Pretty output destination. */
   private PrettyOutput prettyOutput;
 
 
-  /** Create a new instance.
+  /**
+   * Create a new instance.
    *
-   * @param appendable the appendable to write to
+   * @param appendable          the appendable to write to
    * @param smallStructureLimit the limit at which small structures are expanded
    */
   public PrettyFormatter(Appendable appendable, int smallStructureLimit) {
@@ -28,23 +30,23 @@ public class PrettyFormatter implements Formatter, Appendable {
 
 
   @Override
-  public Appendable append(CharSequence csq) {
+  public PrettyFormatter append(CharSequence csq) {
     prettyOutput = prettyOutput.append(csq);
-    return prettyOutput;
+    return this;
   }
 
 
   @Override
-  public Appendable append(CharSequence csq, int start, int end) {
+  public PrettyFormatter append(CharSequence csq, int start, int end) {
     prettyOutput = prettyOutput.append(csq, start, end);
-    return prettyOutput;
+    return this;
   }
 
 
   @Override
-  public Appendable append(char c) {
+  public PrettyFormatter append(char c) {
     prettyOutput = prettyOutput.append(c);
-    return prettyOutput;
+    return this;
   }
 
 
@@ -65,7 +67,7 @@ public class PrettyFormatter implements Formatter, Appendable {
     try {
       value.writeTo(this);
     } catch (IOException exception) {
-      throw new InternalError("Impossible IOException", exception);
+      throw new JsonIOException(exception);
     }
   }
 
@@ -99,7 +101,8 @@ public class PrettyFormatter implements Formatter, Appendable {
     try {
       CJString.format(this, key);
     } catch (IOException exception) {
-      throw new InternalError("Impossible IOException", exception);
+      // As 'this' does not throw any IOExceptions, this should never happen
+      throw new InternalError("Impossible I/O Exception", exception);
     }
   }
 

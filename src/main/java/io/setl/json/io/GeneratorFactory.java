@@ -5,8 +5,11 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.Charset;
 import java.util.Map;
+
 import jakarta.json.JsonException;
 import jakarta.json.stream.JsonGenerator;
 import jakarta.json.stream.JsonGeneratorFactory;
@@ -18,6 +21,9 @@ import jakarta.json.stream.JsonGeneratorFactory;
  */
 public class GeneratorFactory implements JsonGeneratorFactory {
 
+  /** The default value for the small structure limit. */
+  public static final int DEFAULT_SMALL_STRUCTURE_LIMIT = 30;
+
   /** The maximum character size for a small structure which will be printed without new-lines. */
   public static final String SMALL_STRUCTURE_LIMIT = "setl.json.generator.smallStructureLimit";
 
@@ -26,7 +32,7 @@ public class GeneratorFactory implements JsonGeneratorFactory {
 
   private boolean prettyPrinting = false;
 
-  private int smallStructureLimit = 30;
+  private int smallStructureLimit = DEFAULT_SMALL_STRUCTURE_LIMIT;
 
   private boolean trustKeyOrder = false;
 
@@ -44,22 +50,31 @@ public class GeneratorFactory implements JsonGeneratorFactory {
 
     if (config.containsKey(TRUST_KEY_ORDER)) {
       String val = String.valueOf(config.get(TRUST_KEY_ORDER));
+      // defaults to false
       trustKeyOrder = Boolean.parseBoolean(val);
     }
     if (config.containsKey(JsonGenerator.PRETTY_PRINTING)) {
-      // The specification says that the value can be anything without saying what any value should mean. For us, anything other than "false" turns it on.
-      String val = String.valueOf(config.get(TRUST_KEY_ORDER));
+      // The specification says that the value can be anything without saying what any value should mean.
+      // We assume that if the value is specified at all, it is probably intended to turn it on, so anything
+      // other than "false" is treated as activating pretty printing.
+      String val = String.valueOf(config.get(JsonGenerator.PRETTY_PRINTING));
       prettyPrinting = !val.equalsIgnoreCase("false");
     }
     if (config.containsKey(SMALL_STRUCTURE_LIMIT)) {
       Object o = config.get(SMALL_STRUCTURE_LIMIT);
-      if (o instanceof Number) {
+      // Integers are easy
+      if (o instanceof Integer) {
         smallStructureLimit = Math.max(0, ((Number) o).intValue());
-      }
-      if (o instanceof String) {
+      } else {
+        // Try to convert to a valid number
         try {
-          smallStructureLimit = Integer.parseInt((String) o);
+          smallStructureLimit = new BigDecimal(String.valueOf(o))
+              .setScale(0, RoundingMode.HALF_EVEN)
+              .min(BigDecimal.valueOf(Integer.MAX_VALUE))
+              .max(BigDecimal.valueOf(0))
+              .intValueExact();
         } catch (NumberFormatException e) {
+          // just use the length of the string
           smallStructureLimit = ((String) o).length();
         }
       }

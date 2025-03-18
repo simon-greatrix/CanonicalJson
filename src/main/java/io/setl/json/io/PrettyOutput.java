@@ -5,24 +5,40 @@ package io.setl.json.io;
  *
  * @author Simon Greatrix on 20/11/2020.
  */
-public interface PrettyOutput extends Appendable {
+interface PrettyOutput extends Appendable {
 
   /** Special symbols that can be appended. */
   enum Special {
     /** The ',' that separates a values in an array or key-value pairs in an object. */
-    SEPARATOR,
+    SEPARATOR(','),
+
     /** The '[' that starts an array. */
-    START_ARRAY,
+    START_ARRAY('['),
+
     /** The '{' that starts an object. */
-    START_OBJECT,
+    START_OBJECT('{'),
+
     /** The ']' that ends an array. */
-    END_ARRAY,
+    END_ARRAY(']'),
+
     /** The '}' that ends an object. */
-    END_OBJECT
+    END_OBJECT('}');
+
+    private final char symbol;
+
+
+    Special(char symbol) {
+      this.symbol = symbol;
+    }
+
+
+    public char symbol() {
+      return symbol;
+    }
   }
 
   /**
-   * Append the character sequence to the output.
+   * Append the character sequence to the output. The character sequence must not contain any special symbol from the Special enum.
    *
    * @param csq the sequence
    *
@@ -42,7 +58,7 @@ public interface PrettyOutput extends Appendable {
   PrettyOutput append(char[] csq, int start, int end);
 
   /**
-   * Append part of the character sequence to the output.
+   * Append part of the character sequence to the output.  The character sequence must not contain any special symbol from the Special enum.
    *
    * @param csq   the sequence
    * @param start the first character to append

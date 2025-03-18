@@ -1,12 +1,19 @@
 package io.setl.json.io;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 
+import java.io.IOException;
 import java.io.StringWriter;
-import jakarta.json.JsonValue;
 
+import jakarta.json.JsonValue;
 import org.junit.jupiter.api.Test;
 
+import io.setl.json.exception.JsonIOException;
+import io.setl.json.primitive.CJBase;
 import io.setl.json.primitive.CJTrue;
 
 /**
@@ -14,9 +21,46 @@ import io.setl.json.primitive.CJTrue;
  */
 public class PrettyFormatterTest {
 
+  /** Force an I/O Exception where none is expected. */
+  static class BadPrettyFormatter extends PrettyFormatter {
+
+    public BadPrettyFormatter(Appendable appendable, int smallStructureLimit) {
+      super(appendable, smallStructureLimit);
+    }
+
+
+    @Override
+    public PrettyFormatter append(char c) {
+      throwSneakyIOException();
+      return this;
+    }
+
+  }
+
+
+  /** Sneaky thrower. */
+  public static <E extends Throwable> void sneakyThrow(Throwable e) throws E {
+    throw (E) e;
+  }
+
+
+  /** Throws a sneaky IOException. */
+  private static void throwSneakyIOException() {
+    sneakyThrow(new IOException("sneaky"));
+  }
+
   StringWriter writer = new StringWriter();
 
-  TrustedGenerator generator = new TrustedGenerator(new PrettyFormatter(writer, 15));
+  PrettyFormatter formatter = new PrettyFormatter(writer, 15);
+
+  TrustedGenerator generator = new TrustedGenerator(formatter);
+
+
+  @Test
+  void append() throws IOException {
+    formatter.append('1').append("234").append("abd5678def", 3, 7);
+    assertEquals("12345678", writer.toString());
+  }
 
 
   @Test
@@ -35,17 +79,19 @@ public class PrettyFormatterTest {
         .writeEnd()
         .writeEnd()
         .close();
-    assertEquals("[\n"
-        + "  [\n"
-        + "    [\n"
-        + "      [\n"
-        + "        [\n"
-        + "          []\n"
-        + "        ]\n"
-        + "      ]\n"
-        + "    ]\n"
-        + "  ]\n"
-        + "]", writer.toString());
+    assertEquals(
+        "[\n"
+            + "  [\n"
+            + "    [\n"
+            + "      [\n"
+            + "        [\n"
+            + "          []\n"
+            + "        ]\n"
+            + "      ]\n"
+            + "    ]\n"
+            + "  ]\n"
+            + "]", writer.toString()
+    );
   }
 
 
@@ -62,6 +108,13 @@ public class PrettyFormatterTest {
     generator.write(JsonValue.EMPTY_JSON_OBJECT);
     generator.close();
     assertEquals("{}", writer.toString());
+  }
+
+
+  @Test
+  void writeKeyHandlesException() {
+    BadPrettyFormatter formatter1 = new BadPrettyFormatter(new StringBuffer(), 15);
+    assertThrows(InternalError.class, () -> formatter1.writeKey("key"));
   }
 
 
@@ -97,11 +150,13 @@ public class PrettyFormatterTest {
   @Test
   public void writeSmallArray4() {
     generator.writeStartArray().write(1).write("a").writeStartArray().write(2).write(20).write(200).writeEnd().writeEnd().close();
-    assertEquals("[\n"
-        + "  1,\n"
-        + "  \"a\",\n"
-        + "  [ 2, 20, 200 ]\n"
-        + "]", writer.toString());
+    assertEquals(
+        "[\n"
+            + "  1,\n"
+            + "  \"a\",\n"
+            + "  [ 2, 20, 200 ]\n"
+            + "]", writer.toString()
+    );
   }
 
 
@@ -120,21 +175,33 @@ public class PrettyFormatterTest {
         .writeEnd()
         .writeEnd()
         .close();
-    assertEquals("[\n"
-        + "  [\n"
-        + "    [ [ [ [] ] ] ]\n"
-        + "  ]\n"
-        + "]", writer.toString());
+    assertEquals(
+        "[\n"
+            + "  [\n"
+            + "    [ [ [ [] ] ] ]\n"
+            + "  ]\n"
+            + "]", writer.toString()
+    );
   }
 
 
   @Test
   public void writeSmallObject1() {
     generator.writeStartObject().writeStartObject("a").write("b", 1).writeEnd().writeStartArray("c").write(2).writeEnd().writeEnd().close();
-    assertEquals("{\n"
-        + "  \"a\": { \"b\": 1 },\n"
-        + "  \"c\": [ 2 ]\n"
-        + "}", writer.toString());
+    assertEquals(
+        "{\n"
+            + "  \"a\": { \"b\": 1 },\n"
+            + "  \"c\": [ 2 ]\n"
+            + "}", writer.toString()
+    );
+  }
+
+
+  @Test
+  void writeValueHandlesException() throws IOException {
+    CJBase value = mock(CJBase.class);
+    doThrow(IOException.class).when(value).writeTo(any(Appendable.class));
+    assertThrows(JsonIOException.class, () -> formatter.write(value));
   }
 
 
@@ -142,10 +209,12 @@ public class PrettyFormatterTest {
   public void writeWithOverflow() {
     // the second number overflows the buffer
     generator.writeStartArray().write(12345).write(1234567890).writeEnd().close();
-    assertEquals("[\n"
-        + "  12345,\n"
-        + "  1234567890\n"
-        + "]", writer.toString());
+    assertEquals(
+        "[\n"
+            + "  12345,\n"
+            + "  1234567890\n"
+            + "]", writer.toString()
+    );
   }
 
 
@@ -153,10 +222,12 @@ public class PrettyFormatterTest {
   public void writeWithOverflow2() {
     // the comma overflows the buffer
     generator.writeStartArray().write(12345678901L).write(1).writeEnd().close();
-    assertEquals("[\n"
-        + "  12345678901,\n"
-        + "  1\n"
-        + "]", writer.toString());
+    assertEquals(
+        "[\n"
+            + "  12345678901,\n"
+            + "  1\n"
+            + "]", writer.toString()
+    );
   }
 
 
@@ -175,17 +246,19 @@ public class PrettyFormatterTest {
         .writeEnd()
         .writeEnd()
         .close();
-    assertEquals("[\n"
-        + "  1,\n"
-        + "  [\n"
-        + "    1,\n"
-        + "    [\n"
-        + "      1,\n"
-        + "      12345678901,\n"
-        + "      1\n"
-        + "    ]\n"
-        + "  ]\n"
-        + "]", writer.toString());
+    assertEquals(
+        "[\n"
+            + "  1,\n"
+            + "  [\n"
+            + "    1,\n"
+            + "    [\n"
+            + "      1,\n"
+            + "      12345678901,\n"
+            + "      1\n"
+            + "    ]\n"
+            + "  ]\n"
+            + "]", writer.toString()
+    );
   }
 
 }
