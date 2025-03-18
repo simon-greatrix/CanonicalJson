@@ -11,6 +11,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.lang.reflect.Field;
 import java.util.Map;
 
 import jakarta.json.JsonArray;
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import io.setl.json.CJObject;
+import io.setl.json.parser.Parser;
 import io.setl.json.primitive.CJTrue;
 
 /**
@@ -41,8 +43,12 @@ public class CJReaderTest {
 
 
   @Test
-  public void close2() {
+  public void close2() throws NoSuchFieldException, IllegalAccessException {
     CJReader reader = new ReaderFactory().createReader(new StringReader("   true   false"));
+    Field field = CJReader.class.getDeclaredField("jParser");
+    field.setAccessible(true);
+    ((Parser) field.get(reader)).setRequireSingleRoot(false);
+
     reader.readValue();
     assertThrows(JsonParsingException.class, () -> reader.close());
   }
@@ -128,11 +134,10 @@ public class CJReaderTest {
 
 
   @Test
-  public void readValue3() {
-    CJReader reader = new ReaderFactory().createReader(new StringReader("   true   false"));
-    JsonValue value = reader.readValue();
-    JsonParsingException e = assertThrows(JsonParsingException.class, () -> reader.close());
-    assertEquals("Saw 'f' after root value.", e.getMessage());
+  public void readValue4() {
+    CJReader reader = new ReaderFactory().createReader(new StringReader(""));
+    JsonParsingException e = assertThrows(JsonParsingException.class, () -> reader.readValue());
+    assertEquals("No data found in document", e.getMessage());
   }
 
 

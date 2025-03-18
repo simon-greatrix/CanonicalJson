@@ -11,12 +11,21 @@ import io.setl.json.exception.JsonIOException;
  *
  * @author Simon Greatrix on 20/11/2020.
  */
-public class AppendableOutput implements PrettyOutput {
+class AppendableOutput implements PrettyOutput {
 
   /** Output. */
   private final Appendable appendable;
 
-  /** Maximum size of a small structure, not including the end marker. */
+  /**
+   * Maximum size of a small structure, not including the end marker (which is two characters: whitespace and symbol).
+   * There are two special values:
+   * <ul>
+   *   <li>0: Do not prettify small structures.</li>
+   *   <li>1: Prettify empty structures only.</li>
+   *   <li>2: Not used.</li>
+   *   <li>3+: Prettify structures up to this size. For example, "[ 1 ]" has three character before the end whitespace and symbol.</li>
+   * </ul>
+   */
   private final int smallStructureLimit;
 
   /** Current level of indentation. */
@@ -31,9 +40,17 @@ public class AppendableOutput implements PrettyOutput {
    */
   public AppendableOutput(Appendable appendable, int smallStructureLimit) {
     this.appendable = appendable;
+    // The smallest possible structure is "[]", which is 2 characters.
+    // The smallest possible non-empty structure is "[ 1 ]", which is 5 characters.
+    // Therefore, between 2 and 5 characters we are only prettifying empty structures.
     if (smallStructureLimit < 2) {
+      // Cannot prettify anything
       this.smallStructureLimit = 0;
+    } else if (smallStructureLimit < 5) {
+      // Only empty structures are prettified.
+      this.smallStructureLimit = 1;
     } else {
+      // Track small structures.
       this.smallStructureLimit = smallStructureLimit - 2;
     }
   }
@@ -97,26 +114,23 @@ public class AppendableOutput implements PrettyOutput {
         return append('\u0000').append(']');
       case END_OBJECT:
         return append('\u0000').append('}');
-      case SEPARATOR:
-        return append(',').append('\u0001');
       case START_ARRAY:
-        if (smallStructureLimit > 0) {
+        if (smallStructureLimit > 1) {
           buffer = new PrettyBuffer(this, smallStructureLimit, Special.END_ARRAY);
-          buffer.append('[').append('\u0002');
-          return buffer;
+          return buffer.append('[').append('\u0002');
         } else {
-          return append('[').append('\u0002');
+          return new PrettyEmptyStructure(this, (smallStructureLimit == 1), '[', Special.END_ARRAY);
         }
       case START_OBJECT:
-        if (smallStructureLimit > 0) {
+        if (smallStructureLimit > 1) {
           buffer = new PrettyBuffer(this, smallStructureLimit, Special.END_OBJECT);
-          buffer.append('{').append('\u0002');
-          return buffer;
+          return buffer.append('{').append('\u0002');
         } else {
-          return append('{').append('\u0002');
+          return new PrettyEmptyStructure(this, (smallStructureLimit == 1), '{', Special.END_OBJECT);
         }
       default:
-        throw new InternalError("Unrecognised enumeration: " + special);
+        // Must be a separator
+        return append(',').append('\u0001');
     }
   }
 

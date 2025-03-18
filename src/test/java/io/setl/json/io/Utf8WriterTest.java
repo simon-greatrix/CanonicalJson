@@ -61,6 +61,11 @@ public class Utf8WriterTest {
     assertTrue(output.isClosed);
   }
 
+  @Test
+  void finish() throws IOException {
+    writer.write(Character.MIN_HIGH_SURROGATE);
+    ioe(() -> writer.finish(), "Isolated high surrogate");
+  }
 
   @Test
   public void flush() throws IOException {

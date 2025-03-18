@@ -88,6 +88,9 @@ public class Parser extends BaseIterator<JsonParser.Event> implements JsonParser
    */
   private final Input input;
 
+  /**
+   * The key strategy to use.
+   */
   private final KeyStrategy keyStrategy;
 
   /**
@@ -95,6 +98,7 @@ public class Parser extends BaseIterator<JsonParser.Event> implements JsonParser
    */
   private int depth = -1;
 
+  /** Currently expecting a key name?. */
   private boolean expectingKey = false;
 
   /**

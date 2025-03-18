@@ -11,14 +11,15 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+
 import jakarta.json.JsonValue;
 import jakarta.json.stream.JsonGenerationException;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import org.mockito.Mockito;
 
+import io.setl.json.Canonical;
 import io.setl.json.exception.JsonIOException;
 
 /**
@@ -36,7 +37,7 @@ public class TrustedGeneratorTest {
     Writer writer = Mockito.mock(Writer.class);
     generator = new TrustedGenerator(new NoOpFormatter(writer));
     generator.close();
-    Mockito.verify(writer).close();
+    verify(writer).close();
   }
 
 
@@ -120,9 +121,11 @@ public class TrustedGeneratorTest {
         .writeEnd()
         .writeEnd();
     generator.close();
-    assertEquals("{\"address\":{\"city\":\"New York\",\"postalCode\":\"10021\",\"state\":\"NY\",\"streetAddress\":\"21 2nd Street\"},"
-        + "\"age\":25,\"firstName\":\"John\",\"lastName\":\"Smith\",\"phoneNumber\":[{\"number\":\"212 555-1234\",\"type\":\"home\"},"
-        + "{\"number\":\"646 555-4567\",\"type\":\"fax\"}]}", writer.toString());
+    assertEquals(
+        "{\"address\":{\"city\":\"New York\",\"postalCode\":\"10021\",\"state\":\"NY\",\"streetAddress\":\"21 2nd Street\"},"
+            + "\"age\":25,\"firstName\":\"John\",\"lastName\":\"Smith\",\"phoneNumber\":[{\"number\":\"212 555-1234\",\"type\":\"home\"},"
+            + "{\"number\":\"646 555-4567\",\"type\":\"fax\"}]}", writer.toString()
+    );
   }
 
 
@@ -409,6 +412,11 @@ public class TrustedGeneratorTest {
     assertEquals("null", writer.toString());
 
     reset();
+    generator.write((Canonical) null);
+    generator.close();
+    assertEquals("null", writer.toString());
+
+    reset();
     generator.writeStartArray();
     generator.writeNull();
     generator.writeEnd();
@@ -585,6 +593,13 @@ public class TrustedGeneratorTest {
     generator.writeEnd();
     generator.close();
     assertEquals("{\"a\":[]}", writer.toString());
+  }
+
+
+  @Test
+  void writeStructureWithoutKey() {
+    generator.writeStartObject();
+    jge(() -> generator.writeStartArray(), "Cannot write value in object context without key");
   }
 
 
