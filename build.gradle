@@ -9,12 +9,13 @@ plugins {
   id 'org.owasp.dependencycheck'
 }
 
-group = 'io.setl'
+group = 'com.pippsford'
 if ((versionDetails().branchName ==~ /^(master)|(release.*)|(patch.*)$/) && versionDetails().isCleanTag) {
   project.version = gitVersion()
 } else {
   project.version = '100-SNAPSHOT'
 }
+project.version = '3.0'
 
 tasks.withType(JavaCompile).configureEach {
   options.encoding = 'UTF-8'
@@ -112,12 +113,12 @@ publishing {
         packaging = 'jar'
         // optionally artifactId can be defined here
         description = 'An implementation of the Canonical JSON format with support for javax.json and Jackson'
-        url = 'https://github.com/setl/canonical-json'
+        url = 'https://github.com/simon-greatrix/CanonicalJson.git'
 
         scm {
-          connection = 'scm:git:https://github.com/setl/canonical-json.git'
-          developerConnection = 'scm:git:https://github.com/setl/canonical-json.git'
-          url = 'https://github.com/setl/canonical-json'
+          connection = 'scm:git:https://github.com/simon-greatrix/CanonicalJson.git'
+          developerConnection = 'scm:git:https://github.com/simon-greatrix/CanonicalJson.git'
+          url = 'https://github.com/simon-greatrix/CanonicalJson.git'
         }
 
         licenses {
@@ -131,9 +132,9 @@ publishing {
           developer {
             id = 'simon-greatrix'
             name = 'Simon Greatrix'
-            email = 'simon.greatrix@setl.io'
-            organization = 'SETL'
-            organizationUrl = 'https://setl.io'
+            email = 'simon@pippsford.com'
+            organization = ''
+            organizationUrl = ''
           }
         }
       }
@@ -142,17 +143,8 @@ publishing {
 
   repositories {
     maven {
-      name = 'central'
-      credentials {
-        username = "$ossrhUsernameToken"
-        password = "$ossrhPasswordToken"
-      }
-
-      if (version.endsWith("SNAPSHOT")) {
-        url = "https://oss.sonatype.org/content/repositories/snapshots/"
-      } else {
-        url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-      }
+      name = 'file'
+      url = layout.buildDirectory.dir('repository')
     }
   }
 }
@@ -162,4 +154,10 @@ signing {
   sign publishing.publications.mavenJava
 }
 
+tasks.register("createCentralZip", Zip) {
+  dependsOn tasks.named("publishMavenJavaPublicationToFileRepository")
+  from layout.buildDirectory.dir("repository")
+  destinationDirectory = layout.buildDirectory.dir("publications")
+  archiveFileName = "central.zip"
+}
 
