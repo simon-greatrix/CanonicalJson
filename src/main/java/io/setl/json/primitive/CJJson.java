@@ -23,12 +23,6 @@ public class CJJson extends CJBase {
 
 
   @Override
-  public boolean equals(Object other) {
-    return super.equals(other);
-  }
-
-
-  @Override
   public Object getValue() {
     return json;
   }
@@ -37,12 +31,6 @@ public class CJJson extends CJBase {
   @Override
   public ValueType getValueType() {
     return null;
-  }
-
-
-  @Override
-  public int hashCode() {
-    return super.hashCode();
   }
 
 

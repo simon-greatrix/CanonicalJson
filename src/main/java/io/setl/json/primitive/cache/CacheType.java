@@ -8,7 +8,7 @@ import java.util.Locale;
  * @author Simon Greatrix on 27/12/2021.
  */
 public enum CacheType {
-  /** A cache to promote unique map keys. Maps the proposed a key {@link String} to its standard representation {@link String}. */
+  /** A cache to promote unique map keys. Maps the proposed key {@link String} to its standard representation {@link String}. */
   KEYS,
 
   /**
