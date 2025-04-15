@@ -10,8 +10,8 @@ The implementation can be used with
 [Jackson](https://github.com/FasterXML/jackson). It exports a Jackson Module which adds serializers and deserializers for the java.json.JsonValue types.
 
 The implementation can be used with [Spring](https://spring.io/). If the
-"setl.json.enabled" property is unset or true, it will register a Web MVC Configurer to allow the input and output of JsonValue instances, and the generation of
-Canonical JSON in responses.
+`"com.pippsford.json.enabled"` property is unset or true, it will register a Web MVC Configurer to allow the input and output of JsonValue instances, and the 
+generation of Canonical JSON in responses.
 
 ## Examples
 
