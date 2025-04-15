@@ -5,7 +5,7 @@ source ~/.gradle/central.sh
 
 BEARER=`printf "$CENTRAL_USERNAME_TOKEN:$CENTRAL_PASSWORD_TOKEN" | base64`
 
-curl --dry-run \
+curl \
   --request POST \
   --verbose \
   --header "Authorization: Bearer $BEARER" \
