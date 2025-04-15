@@ -15,7 +15,6 @@ if ((versionDetails().branchName ==~ /^(master)|(release.*)|(patch.*)$/) && vers
 } else {
   project.version = '100-SNAPSHOT'
 }
-project.version = '3.0'
 
 tasks.withType(JavaCompile).configureEach {
   options.encoding = 'UTF-8'

@@ -1,4 +1,4 @@
-# Run 'gradlew clean createCentralZip' to create the archive
+S# Run 'gradlew clean createCentralZip' to create the archive
 # Run update.sh to upload it to Maven Central
 
 source ~/.gradle/central.sh
