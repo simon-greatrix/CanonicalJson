@@ -3,6 +3,10 @@ package com.pippsford.json.parser;
 import java.math.BigDecimal;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
+
+import com.pippsford.json.CJArray;
+import com.pippsford.json.CJObject;
+import com.pippsford.json.Canonical;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonValue;
@@ -18,7 +22,7 @@ import com.pippsford.json.io.Location;
  *
  * @author Simon Greatrix on 15/01/2020.
  */
-public class StructureParser extends BaseIterator<Event> implements JsonParser {
+public class StructureParser extends BaseIterator<Event> implements CJParser {
 
   private WalkingParser delegate;
 
@@ -110,7 +114,7 @@ public class StructureParser extends BaseIterator<Event> implements JsonParser {
 
 
   @Override
-  public JsonArray getArray() {
+  public CJArray getArray() {
     checkState(Event.START_ARRAY);
     delegate = delegate.getParent();
     return delegate.getArray();
@@ -149,7 +153,7 @@ public class StructureParser extends BaseIterator<Event> implements JsonParser {
 
 
   @Override
-  public JsonObject getObject() {
+  public CJObject getObject() {
     checkState(Event.START_OBJECT);
     delegate = delegate.getParent();
     return delegate.getObject();
@@ -175,7 +179,7 @@ public class StructureParser extends BaseIterator<Event> implements JsonParser {
 
 
   @Override
-  public JsonValue getValue() {
+  public Canonical getValue() {
     return delegate.getValue();
   }
 

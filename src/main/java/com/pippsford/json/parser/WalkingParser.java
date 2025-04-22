@@ -1,9 +1,11 @@
 package com.pippsford.json.parser;
 
 import java.math.BigDecimal;
-import jakarta.json.JsonArray;
+
+import com.pippsford.json.CJArray;
+import com.pippsford.json.CJObject;
+import com.pippsford.json.Canonical;
 import jakarta.json.JsonNumber;
-import jakarta.json.JsonObject;
 import jakarta.json.JsonString;
 import jakarta.json.JsonValue;
 import jakarta.json.JsonValue.ValueType;
@@ -90,10 +92,10 @@ abstract class WalkingParser extends BaseIterator<Event> {
   protected abstract Event fetchNextImpl();
 
 
-  public JsonArray getArray() {
-    JsonValue value = getValue();
+  public CJArray getArray() {
+    Canonical value = getValue();
     checkType(value, ValueType.ARRAY);
-    return (JsonArray) value;
+    return (CJArray) value;
   }
 
 
@@ -119,10 +121,10 @@ abstract class WalkingParser extends BaseIterator<Event> {
   }
 
 
-  public JsonObject getObject() {
-    JsonValue value = getValue();
+  public CJObject getObject() {
+    Canonical value = getValue();
     checkType(value, ValueType.OBJECT);
-    return (JsonObject) value;
+    return (CJObject) value;
   }
 
 
@@ -142,7 +144,7 @@ abstract class WalkingParser extends BaseIterator<Event> {
   }
 
 
-  protected abstract JsonValue getValue();
+  protected abstract Canonical getValue();
 
 
   public boolean isIntegralNumber() {

@@ -50,28 +50,28 @@ public class PatchBuilder implements JsonPatchBuilder, Iterable<PatchOperation> 
 
 
   @Override
-  public JsonPatchBuilder add(String path, JsonValue value) {
+  public PatchBuilder add(String path, JsonValue value) {
     operationList.add(new Add(path, value));
     return this;
   }
 
 
   @Override
-  public JsonPatchBuilder add(String path, String value) {
+  public PatchBuilder add(String path, String value) {
     operationList.add(new Add(path, CJString.create(value)));
     return this;
   }
 
 
   @Override
-  public JsonPatchBuilder add(String path, int value) {
+  public PatchBuilder add(String path, int value) {
     operationList.add(new Add(path, CJNumber.create(value)));
     return this;
   }
 
 
   @Override
-  public JsonPatchBuilder add(String path, boolean value) {
+  public PatchBuilder add(String path, boolean value) {
     operationList.add(new Add(path, value ? CJTrue.TRUE : CJFalse.FALSE));
     return this;
   }
@@ -89,13 +89,13 @@ public class PatchBuilder implements JsonPatchBuilder, Iterable<PatchOperation> 
 
 
   @Override
-  public JsonPatch build() {
+  public Patch build() {
     return new Patch(operationList);
   }
 
 
   @Override
-  public JsonPatchBuilder copy(String path, String from) {
+  public PatchBuilder copy(String path, String from) {
     operationList.add(new Copy(path, from));
     return this;
   }
@@ -109,7 +109,7 @@ public class PatchBuilder implements JsonPatchBuilder, Iterable<PatchOperation> 
    *
    * @return the builder
    */
-  public JsonPatchBuilder digest(String path, JsonValue value) {
+  public PatchBuilder digest(String path, JsonValue value) {
     return digest(path, Test.DEFAULT_DIGEST, value);
   }
 
@@ -123,7 +123,7 @@ public class PatchBuilder implements JsonPatchBuilder, Iterable<PatchOperation> 
    *
    * @return the builder
    */
-  public JsonPatchBuilder digest(@Nonnull String path, @Nullable String algorithm, @Nullable JsonValue value) {
+  public PatchBuilder digest(@Nonnull String path, @Nullable String algorithm, @Nullable JsonValue value) {
     operationList.add(Test.testDigest(PointerFactory.create(path), algorithm, value));
     return this;
   }
@@ -149,14 +149,14 @@ public class PatchBuilder implements JsonPatchBuilder, Iterable<PatchOperation> 
 
 
   @Override
-  public JsonPatchBuilder move(String path, String from) {
+  public PatchBuilder move(String path, String from) {
     operationList.add(new Move(path, from));
     return this;
   }
 
 
   @Override
-  public JsonPatchBuilder remove(String path) {
+  public PatchBuilder remove(String path) {
     operationList.add(new Remove(path));
     return this;
   }
@@ -173,28 +173,28 @@ public class PatchBuilder implements JsonPatchBuilder, Iterable<PatchOperation> 
 
 
   @Override
-  public JsonPatchBuilder replace(String path, JsonValue value) {
+  public PatchBuilder replace(String path, JsonValue value) {
     operationList.add(new Replace(path, value));
     return this;
   }
 
 
   @Override
-  public JsonPatchBuilder replace(String path, String value) {
+  public PatchBuilder replace(String path, String value) {
     operationList.add(new Replace(path, CJString.create(value)));
     return this;
   }
 
 
   @Override
-  public JsonPatchBuilder replace(String path, int value) {
+  public PatchBuilder replace(String path, int value) {
     operationList.add(new Replace(path, CJNumber.create(value)));
     return this;
   }
 
 
   @Override
-  public JsonPatchBuilder replace(String path, boolean value) {
+  public PatchBuilder replace(String path, boolean value) {
     operationList.add(new Replace(path, value ? CJTrue.TRUE : CJFalse.FALSE));
     return this;
   }
@@ -222,28 +222,28 @@ public class PatchBuilder implements JsonPatchBuilder, Iterable<PatchOperation> 
 
 
   @Override
-  public JsonPatchBuilder test(@Nonnull String path, @Nonnull JsonValue value) {
+  public PatchBuilder test(@Nonnull String path, @Nonnull JsonValue value) {
     operationList.add(Test.testValue(PointerFactory.create(path), value));
     return this;
   }
 
 
   @Override
-  public JsonPatchBuilder test(@Nonnull String path, @Nullable String value) {
+  public PatchBuilder test(@Nonnull String path, @Nullable String value) {
     operationList.add(Test.testValue(PointerFactory.create(path), CJString.create(value)));
     return this;
   }
 
 
   @Override
-  public JsonPatchBuilder test(@Nonnull String path, int value) {
+  public PatchBuilder test(@Nonnull String path, int value) {
     operationList.add(Test.testValue(PointerFactory.create(path), CJNumber.create(value)));
     return this;
   }
 
 
   @Override
-  public JsonPatchBuilder test(@Nonnull String path, boolean value) {
+  public PatchBuilder test(@Nonnull String path, boolean value) {
     operationList.add(Test.testValue(PointerFactory.create(path), value ? CJTrue.TRUE : CJFalse.FALSE));
     return this;
   }

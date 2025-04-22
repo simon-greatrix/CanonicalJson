@@ -1,6 +1,8 @@
 package com.pippsford.json.parser;
 
 import java.util.NoSuchElementException;
+
+import com.pippsford.json.Canonical;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonValue;
 import jakarta.json.stream.JsonParser.Event;
@@ -35,14 +37,14 @@ class ArrayWalker extends WalkingParser {
 
 
   @Override
-  public JsonValue getValue() {
+  public Canonical getValue() {
     if (index < 0) {
       throw new IllegalStateException("Next has not been called");
     }
     if (index >= size) {
       throw new NoSuchElementException();
     }
-    return array.get(index);
+    return Canonical.cast(array.get(index));
   }
 
 

@@ -6,11 +6,9 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
-import java.util.TreeMap;
 
 import com.pippsford.json.exception.IncorrectTypeException;
 import com.pippsford.json.io.CJReader;
@@ -19,10 +17,6 @@ import com.pippsford.json.io.Utf8Appendable;
 import com.pippsford.json.io.WriterFactory;
 import com.pippsford.json.primitive.CJNull;
 import com.pippsford.json.primitive.numbers.NumberParser;
-import jakarta.json.JsonArray;
-import jakarta.json.JsonNumber;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonString;
 import jakarta.json.JsonStructure;
 import jakarta.json.JsonValue;
 import jakarta.json.JsonWriter;
@@ -118,46 +112,7 @@ public interface Canonical extends JsonValue, FormattedJson {
    * @return the contained value
    */
   static Object getValue(JsonValue jv) {
-    if (jv instanceof CJStructure) {
-      return ((CJStructure) jv).getExternalValue();
-    }
-    if (jv instanceof Canonical) {
-      return ((Canonical) jv).getValue();
-    }
-    if (jv == null) {
-      return null;
-    }
-    switch (jv.getValueType()) {
-      case ARRAY: {
-        ArrayList<Object> list = new ArrayList<>();
-        for (JsonValue v : ((JsonArray) jv)) {
-          if (v != null) {
-            list.add(null);
-          }
-          list.add(getValue(v));
-        }
-        return list;
-      }
-      case OBJECT: {
-        TreeMap<String, Object> map = new TreeMap<>();
-        for (var e : ((JsonObject) jv).entrySet()) {
-          map.put(e.getKey(), getValue(e.getValue()));
-        }
-        return map;
-      }
-      case FALSE:
-        return Boolean.FALSE;
-      case NUMBER:
-        return ((JsonNumber) jv).numberValue();
-      case NULL:
-        return null;
-      case STRING:
-        return ((JsonString) jv).getString();
-      case TRUE:
-        return Boolean.TRUE;
-      default:
-        throw new IllegalArgumentException("Unknown value type: " + jv.getValueType());
-    }
+    return CanonicalCreator.getValue(jv);
   }
 
   /**

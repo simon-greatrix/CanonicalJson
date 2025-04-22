@@ -45,19 +45,19 @@ public class WriterFactory implements JsonWriterFactory {
 
 
   @Override
-  public JsonWriter createWriter(Writer writer) {
+  public CJWriter createWriter(Writer writer) {
     return new CJWriter(generatorFactory.createGenerator(writer));
   }
 
 
   @Override
-  public JsonWriter createWriter(OutputStream out) {
+  public CJWriter createWriter(OutputStream out) {
     return new CJWriter(generatorFactory.createGenerator(new OutputStreamWriter(out, UTF_8)));
   }
 
 
   @Override
-  public JsonWriter createWriter(OutputStream out, Charset charset) {
+  public CJWriter createWriter(OutputStream out, Charset charset) {
     if (!UTF_8.equals(charset)) {
       throw new JsonException("Canonical JSON must be in UTF-8");
     }

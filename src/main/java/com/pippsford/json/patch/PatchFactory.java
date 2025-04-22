@@ -68,7 +68,7 @@ public final class PatchFactory {
    *
    * @return the patch
    */
-  public static JsonPatch create(JsonValue source, JsonValue target) {
+  public static Patch create(JsonValue source, JsonValue target) {
     return create(source, target, Collections.emptySet());
   }
 
@@ -82,7 +82,7 @@ public final class PatchFactory {
    *
    * @return the patch
    */
-  public static JsonPatch create(JsonValue source, JsonValue target, Set<DiffFeatures> features) {
+  public static Patch create(JsonValue source, JsonValue target, Set<DiffFeatures> features) {
     PatchFactory diff = new PatchFactory(features);
     diff.generateDiffs(source, target);
     return diff.patchBuilder.build();
