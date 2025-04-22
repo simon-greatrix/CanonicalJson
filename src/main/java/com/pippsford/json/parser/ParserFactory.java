@@ -40,7 +40,7 @@ public class ParserFactory implements JsonParserFactory {
 
 
   @Override
-  public JsonParser createParser(Reader reader) {
+  public CJParser createParser(Reader reader) {
     Parser parser = new Parser(reader);
     parser.setRequireSingleRoot(singleRoot);
     return parser;
@@ -48,25 +48,25 @@ public class ParserFactory implements JsonParserFactory {
 
 
   @Override
-  public JsonParser createParser(InputStream in) {
+  public CJParser createParser(InputStream in) {
     return createParser(in, UTF_8);
   }
 
 
   @Override
-  public JsonParser createParser(InputStream in, Charset charset) {
+  public CJParser createParser(InputStream in, Charset charset) {
     return createParser(new InputStreamReader(in, charset));
   }
 
 
   @Override
-  public JsonParser createParser(JsonObject obj) {
+  public CJParser createParser(JsonObject obj) {
     return new StructureParser(obj);
   }
 
 
   @Override
-  public JsonParser createParser(JsonArray array) {
+  public CJParser createParser(JsonArray array) {
     return new StructureParser(array);
   }
 

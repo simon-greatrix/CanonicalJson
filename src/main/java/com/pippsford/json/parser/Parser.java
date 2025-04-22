@@ -28,7 +28,7 @@ import com.pippsford.json.primitive.numbers.NumberParser;
  *
  * @author Simon Greatrix on 10/01/2020.
  */
-public class Parser extends BaseIterator<JsonParser.Event> implements JsonParser {
+public class Parser extends BaseIterator<JsonParser.Event> implements CJParser {
 
   /**
    * Letters for the "false" literal.

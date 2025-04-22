@@ -25,44 +25,44 @@ public class BuilderFactory implements JsonBuilderFactory {
 
 
   @Override
-  public JsonArrayBuilder createArrayBuilder() {
+  public ArrayBuilder createArrayBuilder() {
     return new ArrayBuilder();
   }
 
 
   @Override
-  public JsonArrayBuilder createArrayBuilder(JsonArray array) {
-    JsonArrayBuilder builder = new ArrayBuilder();
+  public ArrayBuilder createArrayBuilder(JsonArray array) {
+    ArrayBuilder builder = new ArrayBuilder();
     array.forEach(o -> builder.add(Canonical.cast(o).copy()));
     return builder;
   }
 
 
   @Override
-  public JsonArrayBuilder createArrayBuilder(Collection<?> collection) {
-    JsonArrayBuilder builder = new ArrayBuilder();
+  public ArrayBuilder createArrayBuilder(Collection<?> collection) {
+    ArrayBuilder builder = new ArrayBuilder();
     collection.forEach(o -> builder.add(Canonical.create(o).copy()));
     return builder;
   }
 
 
   @Override
-  public JsonObjectBuilder createObjectBuilder() {
+  public ObjectBuilder createObjectBuilder() {
     return new ObjectBuilder();
   }
 
 
   @Override
-  public JsonObjectBuilder createObjectBuilder(JsonObject object) {
-    JsonObjectBuilder builder = new ObjectBuilder();
+  public ObjectBuilder createObjectBuilder(JsonObject object) {
+    ObjectBuilder builder = new ObjectBuilder();
     object.forEach((k, v) -> builder.add(k, Canonical.cast(v).copy()));
     return builder;
   }
 
 
   @Override
-  public JsonObjectBuilder createObjectBuilder(Map<String, Object> object) {
-    JsonObjectBuilder builder = new ObjectBuilder();
+  public ObjectBuilder createObjectBuilder(Map<String, Object> object) {
+    ObjectBuilder builder = new ObjectBuilder();
     object.forEach((k, v) -> builder.add(k, Canonical.create(v).copy()));
     return builder;
   }

@@ -1,12 +1,14 @@
 package com.pippsford.json;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import jakarta.json.JsonNumber;
-import jakarta.json.JsonString;
-import jakarta.json.JsonValue;
+import java.util.function.Function;
 
 import com.pippsford.json.exception.NotJsonException;
 import com.pippsford.json.primitive.CJFalse;
@@ -14,12 +16,20 @@ import com.pippsford.json.primitive.CJNull;
 import com.pippsford.json.primitive.CJString;
 import com.pippsford.json.primitive.CJTrue;
 import com.pippsford.json.primitive.numbers.CJNumber;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonNumber;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonString;
+import jakarta.json.JsonValue;
+import jakarta.json.JsonValue.ValueType;
 
 /** Helper for casting and creating Canonicals. */
 class CanonicalCreator {
 
   /** The creators that can be used to create a Canonical from an object. */
   private static final List<CreateOp> CREATORS;
+
+  private static Map<ValueType, Function<JsonValue, Object>> EVALUATORS;
 
 
 
@@ -98,6 +108,55 @@ class CanonicalCreator {
     }
     throw new NotJsonException(value);
   }
+
+
+  private static List<Object> getArrayValue(JsonArray jv) {
+    ArrayList<Object> list = new ArrayList<>();
+    for (JsonValue v : jv) {
+      if (v != null) {
+        list.add(null);
+      }
+      list.add(getValue(v));
+    }
+    return list;
+  }
+
+
+  private static Map<String, Object> getObjectValue(JsonObject jv) {
+    TreeMap<String, Object> map = new TreeMap<>();
+    for (var e : jv.entrySet()) {
+      map.put(e.getKey(), getValue(e.getValue()));
+    }
+    return map;
+  }
+
+
+  /**
+   * Extract the contained value from a JsonValue. Note: arrays and objects are fully converted.
+   *
+   * @param jv the JSON value
+   *
+   * @return the contained value
+   */
+  static Object getValue(JsonValue jv) {
+    if (jv instanceof CJStructure) {
+      return ((CJStructure) jv).getExternalValue();
+    }
+    if (jv instanceof Canonical) {
+      return ((Canonical) jv).getValue();
+    }
+    if (jv == null) {
+      return null;
+    }
+
+    Function<JsonValue, Object> evaluator = EVALUATORS.get(jv.getValueType());
+    if (evaluator != null) {
+      return evaluator.apply(jv);
+    }
+
+    throw new IllegalArgumentException("Unknown value type: " + jv.getValueType());
+  }
+
 
   static {
     CREATORS = List.of(
@@ -231,4 +290,18 @@ class CanonicalCreator {
         }
     );
   }
+
+
+  static {
+    EnumMap<ValueType, Function<JsonValue, Object>> map = new EnumMap<>(ValueType.class);
+    map.put(ValueType.ARRAY, v -> getArrayValue((JsonArray) v));
+    map.put(ValueType.OBJECT, v -> getObjectValue((JsonObject) v));
+    map.put(ValueType.FALSE, v -> Boolean.FALSE);
+    map.put(ValueType.NUMBER, v -> ((JsonNumber) v).numberValue());
+    map.put(ValueType.NULL, v -> null);
+    map.put(ValueType.STRING, v -> ((JsonString) v).getString());
+    map.put(ValueType.TRUE, v -> Boolean.TRUE);
+    EVALUATORS = Collections.unmodifiableMap(map);
+  }
+
 }

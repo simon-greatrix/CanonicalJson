@@ -1,6 +1,8 @@
 package com.pippsford.json.parser;
 
 import java.util.NoSuchElementException;
+
+import com.pippsford.json.Canonical;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonValue;
 import jakarta.json.stream.JsonParser.Event;
@@ -52,7 +54,7 @@ class ObjectWalker extends WalkingParser {
 
 
   @Override
-  public JsonValue getValue() {
+  public Canonical getValue() {
     if (index < 0) {
       throw new IllegalStateException("Next has not been called");
     }
@@ -63,7 +65,7 @@ class ObjectWalker extends WalkingParser {
       return CJString.create(keys[index]);
     }
     JsonValue jv = object.get(keys[index]);
-    return (jv != null) ? jv : CJNull.NULL;
+    return (jv != null) ? Canonical.cast(jv) : CJNull.NULL;
   }
 
 

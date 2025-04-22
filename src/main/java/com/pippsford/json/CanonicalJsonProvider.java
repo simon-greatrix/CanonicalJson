@@ -9,42 +9,33 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Map;
 
+import com.pippsford.json.builder.ArrayBuilder;
 import com.pippsford.json.builder.BuilderFactory;
+import com.pippsford.json.builder.ObjectBuilder;
+import com.pippsford.json.io.CJReader;
+import com.pippsford.json.io.CJWriter;
+import com.pippsford.json.io.Generator;
 import com.pippsford.json.io.GeneratorFactory;
 import com.pippsford.json.io.ReaderFactory;
 import com.pippsford.json.io.WriterFactory;
 import com.pippsford.json.merge.Merge;
 import com.pippsford.json.merge.MergeDiff;
+import com.pippsford.json.parser.CJParser;
 import com.pippsford.json.parser.Parser;
 import com.pippsford.json.parser.ParserFactory;
 import com.pippsford.json.patch.Patch;
 import com.pippsford.json.patch.PatchBuilder;
 import com.pippsford.json.patch.PatchFactory;
+import com.pippsford.json.pointer.JsonExtendedPointer;
 import com.pippsford.json.pointer.PointerFactory;
 import com.pippsford.json.primitive.CJString;
 import com.pippsford.json.primitive.numbers.CJNumber;
 import jakarta.json.JsonArray;
-import jakarta.json.JsonArrayBuilder;
-import jakarta.json.JsonBuilderFactory;
-import jakarta.json.JsonMergePatch;
-import jakarta.json.JsonNumber;
 import jakarta.json.JsonObject;
-import jakarta.json.JsonObjectBuilder;
-import jakarta.json.JsonPatch;
-import jakarta.json.JsonPatchBuilder;
-import jakarta.json.JsonPointer;
-import jakarta.json.JsonReader;
-import jakarta.json.JsonReaderFactory;
-import jakarta.json.JsonString;
 import jakarta.json.JsonStructure;
 import jakarta.json.JsonValue;
-import jakarta.json.JsonWriter;
-import jakarta.json.JsonWriterFactory;
 import jakarta.json.spi.JsonProvider;
 import jakarta.json.stream.JsonGenerator;
-import jakarta.json.stream.JsonGeneratorFactory;
-import jakarta.json.stream.JsonParser;
-import jakarta.json.stream.JsonParserFactory;
 
 /**
  * The provider.
@@ -93,74 +84,74 @@ public class CanonicalJsonProvider extends JsonProvider {
 
 
   @Override
-  public JsonArrayBuilder createArrayBuilder(JsonArray array) {
+  public ArrayBuilder createArrayBuilder(JsonArray array) {
     return createBuilderFactory(null).createArrayBuilder(array);
   }
 
 
   @Override
-  public JsonArrayBuilder createArrayBuilder(Collection<?> collection) {
+  public ArrayBuilder createArrayBuilder(Collection<?> collection) {
     return createBuilderFactory(null).createArrayBuilder(collection);
   }
 
 
   @Override
-  public JsonArrayBuilder createArrayBuilder() {
+  public ArrayBuilder createArrayBuilder() {
     return new BuilderFactory().createArrayBuilder();
   }
 
 
   @Override
-  public JsonBuilderFactory createBuilderFactory(Map<String, ?> config) {
+  public BuilderFactory createBuilderFactory(Map<String, ?> config) {
     // Our ArrayBuilder and ObjectBuilder do not take any configuration, so we discard what was specified.
     return new BuilderFactory();
   }
 
 
   @Override
-  public JsonPatch createDiff(JsonStructure source, JsonStructure target) {
+  public Patch createDiff(JsonStructure source, JsonStructure target) {
     return PatchFactory.create(source, target);
   }
 
 
   @Override
-  public JsonGenerator createGenerator(Writer writer) {
+  public Generator<?> createGenerator(Writer writer) {
     return createGeneratorFactory(null).createGenerator(writer);
   }
 
 
   @Override
-  public JsonGenerator createGenerator(OutputStream out) {
+  public Generator<?> createGenerator(OutputStream out) {
     return createGeneratorFactory(null).createGenerator(out);
   }
 
 
   @Override
-  public JsonGeneratorFactory createGeneratorFactory(Map<String, ?> config) {
+  public GeneratorFactory createGeneratorFactory(Map<String, ?> config) {
     return new GeneratorFactory(config);
   }
 
 
   @Override
-  public JsonMergePatch createMergeDiff(JsonValue source, JsonValue target) {
+  public Merge createMergeDiff(JsonValue source, JsonValue target) {
     return MergeDiff.create(source, target);
   }
 
 
   @Override
-  public JsonMergePatch createMergePatch(JsonValue patch) {
+  public Merge createMergePatch(JsonValue patch) {
     return new Merge(patch);
   }
 
 
   @Override
-  public JsonObjectBuilder createObjectBuilder(JsonObject object) {
+  public ObjectBuilder createObjectBuilder(JsonObject object) {
     return createBuilderFactory(null).createObjectBuilder(object);
   }
 
 
   @Override
-  public JsonObjectBuilder createObjectBuilder(Map<String, ?> map) {
+  public ObjectBuilder createObjectBuilder(Map<String, ?> map) {
     @SuppressWarnings("unchecked")
     Map<String, Object> map2 = (Map<String, Object>) map;
     return createBuilderFactory(null).createObjectBuilder(map2);
@@ -168,121 +159,121 @@ public class CanonicalJsonProvider extends JsonProvider {
 
 
   @Override
-  public JsonObjectBuilder createObjectBuilder() {
+  public ObjectBuilder createObjectBuilder() {
     return new BuilderFactory().createObjectBuilder();
   }
 
 
   @Override
-  public JsonParser createParser(Reader reader) {
+  public CJParser createParser(Reader reader) {
     return new Parser(reader);
   }
 
 
   @Override
-  public JsonParser createParser(InputStream in) {
+  public CJParser createParser(InputStream in) {
     return createParserFactory(null).createParser(in);
   }
 
 
   @Override
-  public JsonParserFactory createParserFactory(Map<String, ?> config) {
+  public ParserFactory createParserFactory(Map<String, ?> config) {
     return new ParserFactory(config);
   }
 
 
   @Override
-  public JsonPatch createPatch(JsonArray array) {
+  public Patch createPatch(JsonArray array) {
     return new Patch(array);
   }
 
 
   @Override
-  public JsonPatchBuilder createPatchBuilder() {
+  public PatchBuilder createPatchBuilder() {
     return createPatchBuilder(null);
   }
 
 
   @Override
-  public JsonPatchBuilder createPatchBuilder(JsonArray array) {
+  public PatchBuilder createPatchBuilder(JsonArray array) {
     return new PatchBuilder(array);
   }
 
 
   @Override
-  public JsonPointer createPointer(String jsonPointer) {
+  public JsonExtendedPointer createPointer(String jsonPointer) {
     return PointerFactory.create(jsonPointer);
   }
 
 
   @Override
-  public JsonReader createReader(Reader reader) {
+  public CJReader createReader(Reader reader) {
     return createReaderFactory(null).createReader(reader);
   }
 
 
   @Override
-  public JsonReader createReader(InputStream in) {
+  public CJReader createReader(InputStream in) {
     return createReaderFactory(null).createReader(in);
   }
 
 
   @Override
-  public JsonReaderFactory createReaderFactory(Map<String, ?> config) {
+  public ReaderFactory createReaderFactory(Map<String, ?> config) {
     return new ReaderFactory(config);
   }
 
 
   @Override
-  public JsonString createValue(String value) {
+  public CJString createValue(String value) {
     return CJString.create(value);
   }
 
 
   @Override
-  public JsonNumber createValue(int value) {
+  public CJNumber createValue(int value) {
     return CJNumber.create(value);
   }
 
 
   @Override
-  public JsonNumber createValue(long value) {
+  public CJNumber createValue(long value) {
     return CJNumber.create(value);
   }
 
 
   @Override
-  public JsonNumber createValue(double value) {
+  public CJNumber createValue(double value) {
     return CJNumber.cast(value);
   }
 
 
   @Override
-  public JsonNumber createValue(BigDecimal value) {
+  public CJNumber createValue(BigDecimal value) {
     return CJNumber.cast(value);
   }
 
 
   @Override
-  public JsonNumber createValue(BigInteger value) {
+  public CJNumber createValue(BigInteger value) {
     return CJNumber.cast(value);
   }
 
 
   @Override
-  public JsonWriter createWriter(Writer writer) {
+  public CJWriter createWriter(Writer writer) {
     return createWriterFactory(null).createWriter(writer);
   }
 
 
   @Override
-  public JsonWriter createWriter(OutputStream out) {
+  public CJWriter createWriter(OutputStream out) {
     return createWriterFactory(null).createWriter(out);
   }
 
 
   @Override
-  public JsonWriterFactory createWriterFactory(Map<String, ?> config) {
+  public WriterFactory createWriterFactory(Map<String, ?> config) {
     return new WriterFactory(createGeneratorFactory(config));
   }
 
