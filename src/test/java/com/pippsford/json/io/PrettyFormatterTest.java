@@ -39,6 +39,7 @@ public class PrettyFormatterTest {
 
 
   /** Sneaky thrower. */
+  @SuppressWarnings("unchecked")
   public static <E extends Throwable> void sneakyThrow(Throwable e) throws E {
     throw (E) e;
   }
@@ -57,7 +58,7 @@ public class PrettyFormatterTest {
 
 
   @Test
-  void append() throws IOException {
+  void append() {
     formatter.append('1').append("234").append("abd5678def", 3, 7);
     assertEquals("12345678", writer.toString());
   }

@@ -87,8 +87,18 @@ java {
   withSourcesJar()
   withJavadocJar()
   toolchain {
-    languageVersion = JavaLanguageVersion.of(11)
+    languageVersion = JavaLanguageVersion.of(17)
   }
+}
+
+compileJava {
+  options.compilerArgs << '-parameters'
+  options.compilerArgs << '-Xlint:deprecation'
+}
+
+compileTestJava {
+  options.compilerArgs << '-parameters'
+  options.compilerArgs << '-Xlint:deprecation'
 }
 
 javadoc {
