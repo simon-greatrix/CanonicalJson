@@ -11,19 +11,18 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
-import jakarta.json.JsonException;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonPatch.Operation;
-import jakarta.json.JsonValue;
-
 import com.pippsford.json.CJObject;
 import com.pippsford.json.Canonical;
 import com.pippsford.json.builder.ObjectBuilder;
 import com.pippsford.json.patch.PatchOperation;
 import com.pippsford.json.pointer.JsonExtendedPointer;
 import com.pippsford.json.pointer.JsonExtendedPointer.ResultOfAdd;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+import jakarta.json.JsonException;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonPatch.Operation;
+import jakarta.json.JsonValue;
 
 /**
  * A "test" operation. The standard test is extended to allow verification of cryptographic digests.
@@ -221,11 +220,21 @@ public abstract class Test extends PatchOperation {
   }
 
 
+  /**
+   * New instance using a pointer.
+   *
+   * @param pointer the pointer
+   */
   protected Test(@Nonnull JsonExtendedPointer pointer) {
     super(pointer);
   }
 
 
+  /**
+   * New instance using a path.
+   *
+   * @param path the path
+   */
   protected Test(@Nonnull String path) {
     super(path);
   }
@@ -310,6 +319,11 @@ public abstract class Test extends PatchOperation {
   }
 
 
+  /**
+   * Convert this instance to a JSON object using the provided builder.
+   *
+   * @param builder the builder
+   */
   protected abstract void toJsonObject(ObjectBuilder builder);
 
 
