@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+
 import jakarta.json.JsonValue.ValueType;
 
 import org.junit.jupiter.api.Test;
@@ -159,5 +160,4 @@ public class CJBigDecimalTest {
     pbd = new CJBigDecimal(bd);
     assertEquals("-1.234E34", pbd.toString());
   }
-
 }

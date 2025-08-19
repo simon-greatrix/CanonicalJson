@@ -26,8 +26,6 @@ import java.io.UncheckedIOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 
-import com.pippsford.json.exception.ForbiddenIJsonException;
-
 /**
  * An implementation of Ryu for serializing IEEE-754 double precision values
  * as specified by ECMAScript.
@@ -298,7 +296,7 @@ public final class IJsonNumberSerializer {
     if (value == 0.0) {
       return "0";
     }
-    if (Double.isNaN(value) || Double.isInfinite(value)) {
+    if (! Double.isFinite(value)) {
       throw new ForbiddenIJsonException("NaN/Infinity not allowed in JSON");
     }
     ByteArrayOutputStream out = new ByteArrayOutputStream();

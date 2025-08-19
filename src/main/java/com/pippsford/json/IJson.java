@@ -3,12 +3,13 @@ package com.pippsford.json;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.TreeSet;
 
-import com.pippsford.json.exception.ForbiddenIJsonException;
 import com.pippsford.json.exception.JsonIOException;
+import com.pippsford.json.ijson.ForbiddenIJsonException;
 import com.pippsford.json.ijson.IJsonNumberSerializer;
 import com.pippsford.json.primitive.numbers.CJNumber;
 import jakarta.annotation.Nonnull;
@@ -42,6 +43,104 @@ public class IJson {
 
   /** Canonical form uses lower-case hexadecimal. */
   private static final char[] HEX = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+
+  private static final long MAX_SAFE_LONG = 1L << 53;
+
+  private static final long MIN_SAFE_LONG = -(1L << 53);
+
+
+  private static boolean isArrayCompatible(JsonArray array) {
+    for (JsonValue v : array) {
+      if (!isCompatible(v)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+
+  /**
+   * Verify if the supplied value can be safely represented as I-JSON.
+   *
+   * @param value the JSON value
+   *
+   * @return true if the value can be safely represented.
+   */
+  public static boolean isCompatible(JsonValue value) {
+    if (value == null) {
+      return true;
+    }
+    return switch (value.getValueType()) {
+      case ARRAY -> isArrayCompatible((JsonArray) value);
+      case OBJECT -> isObjectCompatible((JsonObject) value);
+      case STRING -> isCompatible(((JsonString) value).getString());
+      case NUMBER -> isCompatible(CJNumber.cast((JsonNumber) value));
+      default -> true;
+    };
+  }
+
+
+  private static boolean isCompatible(String value) {
+    int l = value.length();
+    int i = 0;
+    while (i < l) {
+      int cp = value.codePointAt(i);
+      i += Character.charCount(cp);
+
+      // Check for lone surrogates and non-characters
+      if (isSurrogate(cp) || isNonCharacter(cp)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+
+  private static boolean isCompatible(CJNumber value) {
+    // 32-bit integers are always OK.
+    if (value.getNumberType() == CJNumber.TYPE_INT) {
+      return true;
+    }
+
+    if (value.getNumberType() == CJNumber.TYPE_LONG) {
+      long longValue = value.longValue();
+      if (MIN_SAFE_LONG <= longValue && longValue <= MAX_SAFE_LONG) {
+        return true;
+      }
+    }
+
+    BigDecimal bdOriginal = value.bigDecimalValue();
+    double doubleValue = bdOriginal.doubleValue();
+    if (!Double.isFinite(doubleValue)) {
+      return false;
+    }
+
+    String jsonValue = IJsonNumberSerializer.serialize(doubleValue);
+    BigDecimal bdJson = new BigDecimal(jsonValue);
+    return bdOriginal.compareTo(bdJson) == 0;
+  }
+
+
+  private static boolean isNonCharacter(int cp) {
+    // Non-characters are in the range U+FDD0 to U+FDEF and those ending in 0xFFFE or 0xFFFF
+    return (0xfdd0 <= cp && cp <= 0xfdef) || ((cp & 0xfffe) == 0xfffe);
+  }
+
+
+  private static boolean isObjectCompatible(JsonObject object) {
+    for (var e : object.entrySet()) {
+      if ((!isCompatible(e.getKey())) || (!isCompatible(e.getValue()))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+
+  private static boolean isSurrogate(int cp) {
+    // Surrogates are in the range U+D800 to U+DFFF
+    return Character.MIN_HIGH_SURROGATE <= cp && cp <= Character.MAX_LOW_SURROGATE;
+  }
 
 
   /**
@@ -179,7 +278,12 @@ public class IJson {
       return;
     }
 
-    IJsonNumberSerializer.serialize(out, value.doubleValue());
+    if (isCompatible(cjNumber)) {
+      IJsonNumberSerializer.serialize(out, value.doubleValue());
+      return;
+    }
+
+    throw new ForbiddenIJsonException("Bad number:" + value.toString());
   }
 
 
@@ -190,7 +294,7 @@ public class IJson {
       return;
     }
 
-    // Canonical IJSON uses the same String order that Java uses naturally.
+    // Canonical I-JSON uses the same String order that Java uses naturally.
     TreeSet<String> keys = new TreeSet<>(Comparator.naturalOrder());
     keys.addAll(value.keySet());
 
@@ -258,9 +362,11 @@ public class IJson {
 
 
   private static void serializeUTF8(OutputStream out, int cp) throws IOException {
-    if (cp < 0x80) {
-      out.write(cp);
-    } else if (cp < 0x800) {
+    assert cp >= 0x80;
+    if ((0xfdd0 <= cp && cp <= 0xfdef) || (((cp & 0xfffe) == 0xfffe))) {
+      throw new ForbiddenIJsonException("Non-characters are not permitted: U+" + Integer.toHexString(cp));
+    }
+    if (cp < 0x800) {
       out.write(0xc0 | (cp >> 6));
       out.write(0x80 | (cp & 0x3f));
     } else if (cp < 0x1_0000) {

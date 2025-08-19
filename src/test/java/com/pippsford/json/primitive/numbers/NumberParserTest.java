@@ -1,11 +1,13 @@
 package com.pippsford.json.primitive.numbers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.StringReader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+import jakarta.json.stream.JsonParsingException;
 import org.junit.jupiter.api.Test;
 
 import com.pippsford.json.io.Input;
@@ -93,4 +95,15 @@ public class NumberParserTest {
     assertEquals(CJNumber.TYPE_LONG, pn.getNumberType());
   }
 
+
+  @Test
+  void testUnsupported() {
+    assertThrows(
+        JsonParsingException.class, () -> {
+      // Exponent too large
+      Input input = new Input(new StringReader("1E+10000000000"));
+      NumberParser np = new NumberParser(input);
+      np.parse(input.read());
+    });
+  }
 }

@@ -11,7 +11,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.zip.GZIPInputStream;
 
-import com.pippsford.json.exception.ForbiddenIJsonException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;

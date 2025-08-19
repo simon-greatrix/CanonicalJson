@@ -127,7 +127,7 @@ The `CJObject` and `CJArray` classes can be created directly and offer an extend
 ## Security Addendum
 
 ### Asymmetric attack via integer expansion
-The canonical JSON format specifies that integer values be expressed in full without use of the exponential form. This opens a vulnerability for an 
+The canonical JSON format specifies that integer values be expressed in full without using the exponential form. This opens a vulnerability for an 
 asynchronous attack. A JSON of the form:
 
 ```json
@@ -136,6 +136,6 @@ asynchronous attack. A JSON of the form:
 }
 ```
 
-would require to be expanded to specify all ten million zeros individually. This allows very small messages to place very large load on a server which is 
+would require to be expanded to specify all ten million zeros individually. This allows very small messages to place a very large load on a server, which is 
 therefore an opening for an asymmetric attack. To avoid this, an integer value with 30 or more trailing zeros will be expressed according to the rules for 
 a floating point number.

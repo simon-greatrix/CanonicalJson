@@ -122,7 +122,7 @@ public class TestParsing {
       }
 
       if (f.startsWith("n_")) {
-        // Required to parse successfully
+        // Required to parse with JSON error
         if (thrown != null) {
           if (isDebug) {
             System.out.println("PASS: " + f + " : " + thrown.getMessage() + " at " + thrown.getLocation());
