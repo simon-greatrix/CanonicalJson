@@ -4,13 +4,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.util.Objects;
 import java.util.zip.GZIPInputStream;
 
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -19,41 +22,74 @@ class IJsonNumberSerializerTest {
 
   @Test
   void bigComparisonTest() throws IOException {
-    int[] hex = new int[128];
-    for (int i = 0; i < 10; i++) {
-      hex[i + '0'] = i;
+    String path;
+    try (InputStream inputStream = IJsonNumberSerializerTest.class.getClassLoader().getResourceAsStream("ijson_random_numbers.txt")) {
+      Assumptions.assumeTrue(
+          inputStream != null,
+          () -> "Skipping text as input resource is not available"
+      );
+      path = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
     }
-    for (int i = 0; i < 6; i++) {
-      hex[i + 'a'] = i + 10;
-      hex[i + 'A'] = i + 10;
-    }
+
+    Assumptions.assumeTrue(
+        new File(path).canRead(),
+        () -> "Skipping text as input resource is not readable: " + path
+    );
+
+    Xoshiro256pp rng = new Xoshiro256pp(new long[]{1L, 2L, 3L, 4L});
 
     try (
         BufferedReader br = new BufferedReader(
             new InputStreamReader(
                 new GZIPInputStream(
-                    Objects.requireNonNull(
-                        IJsonNumberSerializerTest.class.getClassLoader().getResourceAsStream("es6testfile10M.txt.gz")
-                    )
+                    new FileInputStream(path)
                 ),
                 StandardCharsets.UTF_8
             )
         )
     ) {
+      int lineCount = 0;
+      while (true) {
+        String line = br.readLine();
+        if (line == null) {
+          break;
+        }
+        lineCount++;
+
+        double d;
+        do {
+          d = Double.longBitsToDouble(rng.next());
+        } while (!Double.isFinite(d));
+
+        assertEquals(line, IJsonNumberSerializer.serialize(d));
+      }
+      System.out.println("Verified: " + lineCount);
+    }
+  }
+
+
+  @ParameterizedTest
+  @CsvSource({
+      "ijson_serial_numbers.txt",
+      "ijson_static_numbers.txt"
+  })
+  void comparisonTest(String resource) throws IOException {
+    // To generate input files, see the JS scripts in src/test/js/ijson
+
+    try (InputStream inputStream = IJsonNumberSerializerTest.class.getClassLoader().getResourceAsStream(resource)) {
+      Assumptions.assumeTrue(
+          inputStream != null,
+          () -> "Skipping text as input resource is not available: " + resource
+      );
+      BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
       while (true) {
         String line = br.readLine();
         if (line == null) {
           break;
         }
 
-        long bits = 0;
         int commaPos = line.indexOf(',');
-        String hexDigits = line.substring(0, commaPos);
-        int len = hexDigits.length();
-        for (int i = 0; i < len; i++) {
-          bits <<= 4;
-          bits |= hex[hexDigits.charAt(i)];
-        }
+        long bits = Long.parseLong(line.substring(0, commaPos));
         String json = line.substring(commaPos + 1);
         assertEquals(json, IJsonNumberSerializer.serialize(Double.longBitsToDouble(bits)));
       }
@@ -62,7 +98,7 @@ class IJsonNumberSerializerTest {
 
 
   @Test
-  void powersOfTwo() throws IOException {
+  void powersOfTwo() {
     for (long k = -20; k <= 20; k++) {
       double d = Double.longBitsToDouble(((k + 1023L) & 0x7ff) << 52);
       String s = IJsonNumberSerializer.serialize(d);
@@ -117,7 +153,7 @@ class IJsonNumberSerializerTest {
 
 
   @Test
-  void testNan() throws IOException {
+  void testNan() {
     assertThrows(ForbiddenIJsonException.class, () -> IJsonNumberSerializer.serialize(Double.NaN));
     assertThrows(ForbiddenIJsonException.class, () -> IJsonNumberSerializer.serialize(Double.POSITIVE_INFINITY));
     assertThrows(ForbiddenIJsonException.class, () -> IJsonNumberSerializer.serialize(Double.NEGATIVE_INFINITY));
@@ -125,7 +161,7 @@ class IJsonNumberSerializerTest {
 
 
   @Test
-  void testNines() throws IOException {
+  void testNines() {
     for (int i = 10; i <= 25; i++) {
       double d = Double.parseDouble("9".repeat(i));
       String s = IJsonNumberSerializer.serialize(d);
@@ -135,7 +171,7 @@ class IJsonNumberSerializerTest {
 
 
   @Test
-  void testRoundOff() throws IOException {
+  void testRoundOff() {
     for (int i = -300; i < 300; i++) {
       double d = Double.parseDouble("1e" + i);
       String s = IJsonNumberSerializer.serialize(d);
@@ -180,7 +216,7 @@ class IJsonNumberSerializerTest {
 
 
   @Test
-  void testSmallValues() throws IOException {
+  void testSmallValues() {
     for (int i = -10_000; i < 10_000; i++) {
       double d = i * 0.01;
       for (int j = 0; j < 5; j++) {
