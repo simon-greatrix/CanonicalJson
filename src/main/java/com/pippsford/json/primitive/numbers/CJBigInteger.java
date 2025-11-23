@@ -24,6 +24,7 @@ public class CJBigInteger extends CJNumber {
    */
   public static final int MIN_SCALE = -30;
 
+  /** The numeric value. */
   private final BigInteger value;
 
 

@@ -26,6 +26,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.pippsford.json.builder.ArrayBuilder;
 import com.pippsford.json.exception.IncorrectTypeException;
 import com.pippsford.json.exception.MissingItemException;
 import com.pippsford.json.io.Generator;
@@ -250,6 +251,16 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
 
 
   /**
+   * Create a new builder.
+   *
+   * @return the builder
+   */
+  public static ArrayBuilder builder() {
+    return new ArrayBuilder();
+  }
+
+
+  /**
    * Ensure a collection contains no actual nulls.
    *
    * @param c the collection
@@ -270,6 +281,7 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
   }
 
 
+  /** The backing list. */
   private final List<Canonical> myList;
 
 

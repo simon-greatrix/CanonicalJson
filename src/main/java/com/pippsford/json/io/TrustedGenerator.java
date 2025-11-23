@@ -1,5 +1,6 @@
 package com.pippsford.json.io;
 
+import com.pippsford.json.primitive.CodePointOrder;
 import jakarta.json.JsonValue.ValueType;
 import jakarta.json.stream.JsonGenerationException;
 
@@ -108,7 +109,7 @@ class TrustedGenerator implements Generator<TrustedGenerator> {
       if (writtenKey) {
         throw new JsonGenerationException("Cannot write key twice in object context");
       }
-      if (lastKey != null && CJObject.CODE_POINT_ORDER.compare(lastKey, key) > -1) {
+      if (lastKey != null && CodePointOrder.INSTANCE.compare(lastKey, key) > -1) {
         throw new JsonGenerationException("Key " + Canonical.create(key) + " must not come after " + Canonical.create(lastKey));
       }
       lastKey = key;

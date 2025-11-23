@@ -12,6 +12,7 @@ import java.math.BigInteger;
  */
 public class CJBigDecimal extends CJNumber {
 
+  /** The numeric value. */
   private final BigDecimal value;
 
 

@@ -1,9 +1,10 @@
 package com.pippsford.json.primitive;
 
 import java.io.IOException;
-import jakarta.json.JsonValue;
+import java.io.Serial;
 
 import com.pippsford.json.Canonical;
+import jakarta.json.JsonValue;
 
 /**
  * Representation of "true".
@@ -58,6 +59,17 @@ public class CJTrue extends CJBase implements CJBoolean {
   @Override
   public int hashCode() {
     return JsonValue.TRUE.hashCode();
+  }
+
+
+  /**
+   * Ensure the singleton is used on deserialization.
+   *
+   * @return the singleton
+   */
+  @Serial
+  public Object readResolve() {
+    return TRUE;
   }
 
 

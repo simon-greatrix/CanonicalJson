@@ -10,6 +10,7 @@ import java.math.BigInteger;
  */
 public class CJLong extends CJNumber {
 
+  /** The numeric value. */
   private final long value;
 
 

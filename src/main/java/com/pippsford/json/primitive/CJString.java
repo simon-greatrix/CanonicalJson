@@ -202,6 +202,7 @@ public class CJString extends CJBase implements JsonString {
     ESCAPES = escaped;
   }
 
+  /** The string value. */
   private final String value;
 
 

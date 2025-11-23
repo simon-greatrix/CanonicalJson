@@ -364,9 +364,9 @@ public class NumberParser {
         pNumber = cache.get(txt, NumberParser::doCreate);
       }
     } catch (NumberFormatException | ArithmeticException e) {
-      pNumber = new BadNumber(new JsonParsingException("Invalid number", e, input.getLocation()));
+      throw new JsonParsingException("Invalid number", e, input.getLocation());
     }
-    pNumber.check();
+
     return pNumber;
   }
 

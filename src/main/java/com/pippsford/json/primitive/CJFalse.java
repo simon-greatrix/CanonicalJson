@@ -1,6 +1,8 @@
 package com.pippsford.json.primitive;
 
 import java.io.IOException;
+import java.io.Serial;
+
 import jakarta.json.JsonValue;
 
 /**
@@ -41,6 +43,17 @@ public class CJFalse extends CJBase implements CJBoolean {
   @Override
   public int hashCode() {
     return JsonValue.FALSE.hashCode();
+  }
+
+
+  /**
+   * Ensure the singleton is used on deserialization.
+   *
+   * @return the singleton
+   */
+  @Serial
+  public Object readResolve() {
+    return FALSE;
   }
 
 

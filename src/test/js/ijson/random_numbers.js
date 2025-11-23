@@ -35,7 +35,7 @@ class Xoshiro256pp {
   next() {
     const state = this.state;
     this.jumpCount--;
-    
+
     if (this.jumpCount < 0) {
       // Do jump with SHA-256
       this.jumpCount = 1000;

@@ -10,6 +10,7 @@ import java.math.BigInteger;
  */
 public class CJInt extends CJNumber {
 
+  /** The numeric value. */
   private final int value;
 
 

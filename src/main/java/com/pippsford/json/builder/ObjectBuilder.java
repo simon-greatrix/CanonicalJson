@@ -2,12 +2,12 @@ package com.pippsford.json.builder;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import jakarta.json.JsonArrayBuilder;
-import jakarta.json.JsonObjectBuilder;
-import jakarta.json.JsonValue;
 
 import com.pippsford.json.CJObject;
 import com.pippsford.json.FormattedJson;
+import jakarta.json.JsonArrayBuilder;
+import jakarta.json.JsonObjectBuilder;
+import jakarta.json.JsonValue;
 
 /**
  * A builder for JSON Objects.

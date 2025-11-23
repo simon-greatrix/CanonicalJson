@@ -2,6 +2,7 @@ package com.pippsford.json;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.math.BigDecimal;
@@ -27,7 +28,7 @@ import jakarta.json.JsonWriter;
  * @author Simon Greatrix on 08/01/2020.
  */
 @SuppressWarnings("checkstyle:OverloadMethodsDeclarationOrder")
-public interface Canonical extends JsonValue, FormattedJson {
+public interface Canonical extends JsonValue, FormattedJson, Serializable {
 
   /**
    * Test for whether a value is a Boolean. The ValueType enumeration distinguishes between true and false, but there are times we want either.

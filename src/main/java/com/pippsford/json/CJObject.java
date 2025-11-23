@@ -31,6 +31,7 @@ import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.pippsford.json.CJArray.MySpliterator;
+import com.pippsford.json.builder.ObjectBuilder;
 import com.pippsford.json.exception.IncorrectTypeException;
 import com.pippsford.json.exception.MissingItemException;
 import com.pippsford.json.io.Generator;
@@ -39,6 +40,7 @@ import com.pippsford.json.primitive.CJFalse;
 import com.pippsford.json.primitive.CJNull;
 import com.pippsford.json.primitive.CJString;
 import com.pippsford.json.primitive.CJTrue;
+import com.pippsford.json.primitive.CodePointOrder;
 import com.pippsford.json.primitive.numbers.CJNumber;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.Nonnull;
@@ -100,29 +102,6 @@ import jakarta.json.JsonValue;
 
 @JsonSerialize(using = JsonObjectSerializer.class)
 public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJStructure, Canonical {
-
-  /**
-   * Sort object keys into Unicode code point order.
-   */
-  @SuppressWarnings("java:S127") // Allow incrementing loop counter inside loop as code points can be one or two characters.
-  public static final Comparator<String> CODE_POINT_ORDER = (s1, s2) -> {
-    int len1 = s1.length();
-    int len2 = s2.length();
-    int lim = Math.min(len1, len2);
-    for (int i = 0; i < lim; i++) {
-      int cp1 = s1.codePointAt(i);
-      int cp2 = s2.codePointAt(i);
-      if (cp1 != cp2) {
-        return cp1 - cp2;
-      }
-      if (cp1 > 0xffff) {
-        i++;
-      }
-    }
-    return len1 - len2;
-  };
-
-
 
   /**
    * Set which converts JsonValue to Canonicals.
@@ -588,12 +567,23 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
   }
 
 
+  /**
+   * Create a new object builder.
+   *
+   * @return the builder
+   */
+  public static ObjectBuilder builder() {
+    return new ObjectBuilder();
+  }
+
+
+  /** The backing map. */
   private final NavigableMap<String, Canonical> myMap;
 
 
   /** New instance. */
   public CJObject() {
-    myMap = new TreeMap<>(CODE_POINT_ORDER);
+    myMap = new TreeMap<>(CodePointOrder.INSTANCE);
   }
 
 
@@ -603,7 +593,7 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
    * @param map the map to copy.
    */
   public CJObject(Map<String, ?> map) {
-    myMap = new TreeMap<>(CODE_POINT_ORDER);
+    myMap = new TreeMap<>(CodePointOrder.INSTANCE);
     for (Entry<String, ?> e : map.entrySet()) {
       myMap.put(e.getKey(), Canonical.create(e.getValue()));
     }
@@ -612,7 +602,7 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
 
   private CJObject(NavigableMap<String, Canonical> map, boolean makeCopy) {
     if (makeCopy) {
-      myMap = new TreeMap<>(CODE_POINT_ORDER);
+      myMap = new TreeMap<>(CodePointOrder.INSTANCE);
       for (Entry<String, Canonical> e : map.entrySet()) {
         myMap.put(e.getKey(), e.getValue().copy());
       }

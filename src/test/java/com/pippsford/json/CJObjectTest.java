@@ -26,6 +26,8 @@ import java.util.NavigableMap;
 import java.util.NavigableSet;
 import java.util.Set;
 import java.util.Spliterator;
+
+import com.pippsford.json.primitive.CodePointOrder;
 import jakarta.json.JsonValue;
 import jakarta.json.JsonValue.ValueType;
 
@@ -66,7 +68,7 @@ public class CJObjectTest {
 
   @Test
   public void comparator() {
-    assertEquals(CJObject.CODE_POINT_ORDER, json.comparator());
+    assertEquals(CodePointOrder.INSTANCE, json.comparator());
   }
 
 

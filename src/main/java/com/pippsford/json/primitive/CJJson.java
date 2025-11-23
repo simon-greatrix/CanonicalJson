@@ -9,6 +9,7 @@ import java.io.IOException;
  */
 public class CJJson extends CJBase {
 
+  /** The serialized json. */
   private final String json;
 
 
