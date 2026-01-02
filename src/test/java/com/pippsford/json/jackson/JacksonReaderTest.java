@@ -8,6 +8,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pippsford.json.CJObject;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonStructure;
@@ -278,4 +281,10 @@ public class JacksonReaderTest {
     assertEquals("test", e.getCause().getMessage());
   }
 
+  @Test
+  public void test15() throws IOException {
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.registerModule(new JsonModule());
+    CJObject object = mapper.readValue("{\"a\":1}", CJObject.class);
+  }
 }

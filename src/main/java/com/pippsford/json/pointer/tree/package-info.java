@@ -1,5 +1,5 @@
 /**
- * The motivation for this extension to the standard javax.json API is to enable the enforcement of a policy of what can be done with patches and what parts of
+ * The motivation for this extension to the standard jakarta.json API is to enable the enforcement of a policy of what can be done with patches and what parts of
  * a JSON structure a user may legitimately create.
  *
  * <p>A user may create a structure if it is wholly contained within the PointerTree that they have create permission for.</p>

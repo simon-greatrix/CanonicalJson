@@ -8,7 +8,7 @@ import jakarta.json.JsonValue.ValueType;
 import com.pippsford.json.primitive.CJString;
 
 /**
- * Exception thrown when at attempt to retrieve a required datum from a JObject or JArray fails because the datum is missing. The javax.json API requires that
+ * Exception thrown when at attempt to retrieve a required datum from a JObject or JArray fails because the datum is missing. The jakarta.json API requires that
  * this extends from NullPointerException.
  */
 public class MissingItemException extends NullPointerException {

@@ -34,7 +34,7 @@ import com.pippsford.json.primitive.CJTrue;
 import com.pippsford.json.primitive.numbers.CJNumber;
 
 /**
- * A utility class to convert between Jackson's JsonNode and javax's JsonValue.
+ * A utility class to convert between Jackson's JsonNode and jakarta's JsonValue.
  *
  * @author Simon Greatrix on 26/02/2020.
  */
@@ -104,7 +104,7 @@ public class Convert {
 
 
   /**
-   * Convert a javax JsonValue to a Jackson JsonNode.
+   * Convert a jakarta JsonValue to a Jackson JsonNode.
    *
    * @param nodeCreator factory for Jackson nodes
    * @param value       the value to convert
@@ -138,7 +138,7 @@ public class Convert {
 
 
   /**
-   * Convert a javax JsonValue to a Jackson JsonNode.
+   * Convert a jakarta JsonValue to a Jackson JsonNode.
    *
    * @param value the value to convert
    *
@@ -150,7 +150,7 @@ public class Convert {
 
 
   /**
-   * Convert a javax JsonArray to a Jackson ArrayNode.
+   * Convert a jakarta JsonArray to a Jackson ArrayNode.
    *
    * @param value the value to convert
    *
@@ -162,7 +162,7 @@ public class Convert {
 
 
   /**
-   * Convert a javax JsonObject to a Jackson ObjectNode.
+   * Convert a jakarta JsonObject to a Jackson ObjectNode.
    *
    * @param value the value to convert
    *
@@ -174,7 +174,7 @@ public class Convert {
 
 
   /**
-   * Convert a javax JsonStructure to a Jackson ContainerNode.
+   * Convert a jakarta JsonStructure to a Jackson ContainerNode.
    *
    * @param value the value to convert
    * @param <T>   the Jackson structural node type
@@ -188,7 +188,7 @@ public class Convert {
 
 
   /**
-   * Convert a Jackson container to a javax JsonStructure.
+   * Convert a Jackson container to a jakarta JsonStructure.
    *
    * @param node the node to convert
    *
@@ -200,7 +200,7 @@ public class Convert {
 
 
   /**
-   * Convert a Jackson ObjectNode to a javax JsonObject.
+   * Convert a Jackson ObjectNode to a jakarta JsonObject.
    *
    * @param node the node to convert
    *
@@ -212,7 +212,7 @@ public class Convert {
 
 
   /**
-   * Convert a Jackson ArrayNode to a javax JsonArray.
+   * Convert a Jackson ArrayNode to a jakarta JsonArray.
    *
    * @param node the node to convert
    *
@@ -224,7 +224,7 @@ public class Convert {
 
 
   /**
-   * Convert a Jackson JsonNode to a javax JsonValue.
+   * Convert a Jackson JsonNode to a jakarta JsonValue.
    *
    * @param node the node to convert
    *
@@ -242,7 +242,7 @@ public class Convert {
 
 
   static {
-    // Map node types to the functions that convert the Jackson node to a javax value
+    // Map node types to the functions that convert the Jackson node to a jakarta value
     Map<JsonNodeType, Function<JsonNode, JsonValue>> map = new EnumMap<>(JsonNodeType.class);
     map.put(JsonNodeType.OBJECT, n -> createJsonObject((ObjectNode) n));
     map.put(JsonNodeType.ARRAY, n -> createJsonArray((ArrayNode) n));

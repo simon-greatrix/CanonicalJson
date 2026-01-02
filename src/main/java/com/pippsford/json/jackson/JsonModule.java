@@ -11,7 +11,7 @@ import com.fasterxml.jackson.core.util.VersionUtil;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 /**
- * A Jackson module to register the serializers and deserializers for javax.json types.
+ * A Jackson module to register the serializers and deserializers for jakarta.json types.
  *
  * @author Simon Greatrix on 12/02/2020.
  */

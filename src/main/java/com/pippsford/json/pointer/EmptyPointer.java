@@ -33,7 +33,7 @@ public class EmptyPointer implements JsonExtendedPointer {
     if (value.getValueType() != target.getValueType()) {
       throw new PointerMismatchException("Root structure type mismatch", "", target.getValueType(), value.getValueType());
     }
-    // This could fail if two javax.json implementations were in use in the same JVM.
+    // This could fail if two jakarta.json implementations were in use in the same JVM.
     @SuppressWarnings("unchecked")
     T output = (T) value;
     return output;
