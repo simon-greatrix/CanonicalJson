@@ -47,7 +47,7 @@ public class CanonicalSerializerTest {
 
   @Test
   public void serialize() throws IOException {
-    JsonMapper mapper = JsonMapper.builder(new CanonicalFactory()).addModule(new JsonModule()).build();
+    JsonMapper mapper = JsonMapper.builder(new CanonicalFactory()).addModule(new CanonicalJsonModule()).build();
 
     String json = mapper.writeValueAsString(fleet);
     // Warning, if you refactor the code, the class names in this will break.

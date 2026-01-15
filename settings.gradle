@@ -5,7 +5,7 @@ pluginManagement {
   }
 
   plugins {
-    id 'com.github.spotbugs' version '5.2.3'
+    id 'com.github.spotbugs' version '6.2.5'
     id 'com.intershop.gradle.jaxb' version '6.1.0'
     id 'com.palantir.git-version' version '3.1.0'
     id 'io.freefair.lombok' version '8.4'

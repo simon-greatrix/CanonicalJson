@@ -33,7 +33,6 @@ import tools.jackson.core.exc.JacksonIOException;
 import tools.jackson.core.io.IOContext;
 import tools.jackson.core.json.DupDetector;
 import tools.jackson.core.json.JsonWriteContext;
-import tools.jackson.core.json.JsonWriteFeature;
 import tools.jackson.core.util.JacksonFeatureSet;
 
 /**
@@ -47,18 +46,6 @@ public class CanonicalGenerator extends GeneratorBase {
   private static final int DEFAULT_STREAM_FEATURES = StreamWriteFeature.AUTO_CLOSE_TARGET.getMask()
       + StreamWriteFeature.AUTO_CLOSE_CONTENT.getMask()
       + StreamWriteFeature.FLUSH_PASSED_TO_STREAM.getMask();
-
-  private static final int DISALLOWED_FEATURES = JsonWriteFeature.WRITE_NUMBERS_AS_STRINGS.getMask()
-      + StreamWriteFeature.WRITE_BIGDECIMAL_AS_PLAIN.getMask()
-      + JsonWriteFeature.ESCAPE_NON_ASCII.getMask();
-
-  private static final int REQUIRED_FEATURES = JsonWriteFeature.QUOTE_PROPERTY_NAMES.getMask()
-      + JsonWriteFeature.WRITE_NAN_AS_STRINGS.getMask();
-
-  private static final int DEFAULT_FEATURE_MASK = StreamWriteFeature.AUTO_CLOSE_TARGET.getMask()
-      + StreamWriteFeature.AUTO_CLOSE_CONTENT.getMask()
-      + StreamWriteFeature.FLUSH_PASSED_TO_STREAM.getMask()
-      + REQUIRED_FEATURES;
 
 
 
@@ -185,8 +172,6 @@ public class CanonicalGenerator extends GeneratorBase {
     isResourceManaged = ioCtxt.isResourceManaged();
     this.writer = writer;
 
-    // TODO check features
-
     DupDetector detector = isEnabled(StreamWriteFeature.STRICT_DUPLICATE_DETECTION)
         ? DupDetector.rootDetector(this) : null;
     writeContext = JsonWriteContext.createRootContext(detector);
@@ -283,8 +268,7 @@ public class CanonicalGenerator extends GeneratorBase {
 
   @Override
   public JacksonFeatureSet<StreamWriteCapability> streamWriteCapabilities() {
-    // TODO
-    return null;
+    return JacksonFeatureSet.fromBitmask(DEFAULT_STREAM_FEATURES);
   }
 
 
@@ -308,7 +292,7 @@ public class CanonicalGenerator extends GeneratorBase {
 
   @Override
   public Version version() {
-    return JsonModule.LIBRARY_VERSION;
+    return CanonicalJsonModule.LIBRARY_VERSION;
   }
 
 
@@ -548,8 +532,6 @@ public class CanonicalGenerator extends GeneratorBase {
    *
    * @param object      the value to write
    * @param isContainer is the value a container? i.e. does it have start and end markers?
-   *
-   * @throws IOException if the write fails
    */
   public void writeRawCanonicalType(Canonical object, boolean isContainer) {
     String json = Canonical.toCanonicalString(object);

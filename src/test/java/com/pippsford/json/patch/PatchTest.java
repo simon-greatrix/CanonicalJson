@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.IOException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pippsford.json.jackson3.CanonicalJsonModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -47,7 +48,7 @@ public class PatchTest {
   @Test
   public void getOperations_jackson3() {
     JsonMapper mapper = JsonMapper.builder()
-        .addModule(new com.pippsford.json.jackson3.JsonModule())
+        .addModule(new CanonicalJsonModule())
         .build();
     String json = mapper.writeValueAsString(patch);
     Patch copy = mapper.readValue(json, Patch.class);

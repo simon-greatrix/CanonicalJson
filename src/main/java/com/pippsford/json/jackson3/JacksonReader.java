@@ -174,9 +174,10 @@ public class JacksonReader implements JsonReader {
       case BIG_INTEGER -> {
         return CJNumber.cast(jsonParser.getBigIntegerValue());
       }
-      default ->
+      default -> {
         // hopefully unreachable
-          throw new IllegalStateException("Unexpected integer type: " + jsonParser.getNumberType());
+        throw new IllegalStateException("Unexpected integer type: " + jsonParser.getNumberType());
+      }
     }
   }
 

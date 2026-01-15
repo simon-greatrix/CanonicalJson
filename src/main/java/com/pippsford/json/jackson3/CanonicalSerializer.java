@@ -41,9 +41,7 @@ public class CanonicalSerializer<T extends Canonical> extends ValueSerializer<T>
     JsonToken token = switch (object.getValueType()) {
       case ARRAY -> JsonToken.START_ARRAY;
       case OBJECT -> JsonToken.START_OBJECT;
-      default ->
-        // We use this when the type is neither an array nor an object.
-          JsonToken.VALUE_EMBEDDED_OBJECT;
+      default -> JsonToken.VALUE_EMBEDDED_OBJECT;
     };
 
     WritableTypeId typeIdDef = typeSer.writeTypePrefix(gen, context, typeSer.typeId(object, token));

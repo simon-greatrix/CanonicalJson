@@ -107,7 +107,7 @@ public class JacksonReaderTest {
   @Test
   public void test15() throws IOException {
     JsonMapper mapper = JsonMapper.builder()
-        .addModule(new JsonModule())
+        .addModule(new CanonicalJsonModule())
         .build();
     CJObject object = mapper.readValue("{\"a\":1}", CJObject.class);
   }

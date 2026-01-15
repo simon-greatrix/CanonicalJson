@@ -14,7 +14,7 @@ import jakarta.json.JsonValue;
  *
  * @author Simon Greatrix on 12/02/2020.
  */
-public class JsonModule extends SimpleModule {
+public class CanonicalJsonModule extends SimpleModule {
 
   /** The version of the library. */
   public static final Version LIBRARY_VERSION = VersionUtil.parseVersion("1.0", "com.pippsford", "canonical-json");
@@ -23,7 +23,7 @@ public class JsonModule extends SimpleModule {
   /**
    * New instance.
    */
-  public JsonModule() {
+  public CanonicalJsonModule() {
     super("Canonical-JSON", LIBRARY_VERSION);
 
     addDeserializer(JsonObject.class, new JsonObjectDeserializer());

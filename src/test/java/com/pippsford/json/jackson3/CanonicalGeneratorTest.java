@@ -5,9 +5,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -16,20 +14,17 @@ import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Base64;
-import java.util.List;
 
+import com.pippsford.json.CJArray;
+import com.pippsford.json.CJObject;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import tools.jackson.core.Base64Variants;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.ObjectWriteContext;
 import tools.jackson.core.Version;
 import tools.jackson.core.io.SerializedString;
 import tools.jackson.core.json.JsonFactory;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.IntNode;
-import com.pippsford.json.CJArray;
-import com.pippsford.json.CJObject;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 /**
  * @author Simon Greatrix on 06/01/2020.
@@ -45,8 +40,10 @@ public class CanonicalGeneratorTest {
   public void badEndArray() throws IOException {
     instance.writeStartObject();
     JacksonException e = assertThrows(JacksonException.class, () -> instance.writeEndArray());
-    assertEquals("Current context not Array but Object\n"
-        + " at [No location information]", e.getMessage());
+    assertEquals(
+        "Current context not Array but Object\n"
+            + " at [No location information]", e.getMessage()
+    );
   }
 
 
@@ -54,8 +51,10 @@ public class CanonicalGeneratorTest {
   public void badEndObject() throws IOException {
     instance.writeStartArray();
     JacksonException e = assertThrows(JacksonException.class, () -> instance.writeEndObject());
-    assertEquals("Current context not Object but Array\n"
-        + " at [No location information]", e.getMessage());
+    assertEquals(
+        "Current context not Object but Array\n"
+            + " at [No location information]", e.getMessage()
+    );
   }
 
 
@@ -88,7 +87,7 @@ public class CanonicalGeneratorTest {
 
   @BeforeEach
   public void setUp() throws IOException {
-    instance = (CanonicalGenerator) new CanonicalFactory(new JsonFactory()).createGenerator(writer);
+    instance = (CanonicalGenerator) new CanonicalFactory(new JsonFactory()).createGenerator(ObjectWriteContext.empty(), writer);
   }
 
 
@@ -172,8 +171,10 @@ public class CanonicalGeneratorTest {
     instance.writeStartObject();
     instance.writeName("chalk");
     JacksonException e = assertThrows(JacksonException.class, () -> instance.writeName(new SerializedString("cheese")));
-    assertEquals("Can not write a field name, expecting a value\n"
-        + " at [No location information]", e.getMessage());
+    assertEquals(
+        "Can not write a field name, expecting a value\n"
+            + " at [No location information]", e.getMessage()
+    );
   }
 
 
@@ -201,8 +202,10 @@ public class CanonicalGeneratorTest {
   public void writeNull_Bad() throws IOException {
     instance.writeStartObject();
     JacksonException e = assertThrows(JacksonException.class, () -> instance.writeNull());
-    assertEquals("Can not write NULL, expecting field name (context: Object)\n"
-        + " at [No location information]", e.getMessage());
+    assertEquals(
+        "Can not write NULL, expecting field name (context: Object)\n"
+            + " at [No location information]", e.getMessage()
+    );
   }
 
 
