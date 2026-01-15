@@ -17,6 +17,7 @@ import com.fasterxml.jackson.core.JsonGenerator.Feature;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonpCharacterEscapes;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pippsford.json.jackson.objects.Pojo;
 import org.junit.jupiter.api.Test;
 
 /**

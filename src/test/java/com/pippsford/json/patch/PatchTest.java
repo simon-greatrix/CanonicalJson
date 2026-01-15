@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import com.pippsford.json.jackson.JsonModule;
 import com.pippsford.json.primitive.CJString;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * @author Simon Greatrix on 11/02/2020.
@@ -43,6 +44,15 @@ public class PatchTest {
     assertEquals(patch, copy);
   }
 
+  @Test
+  public void getOperations_jackson3() {
+    JsonMapper mapper = JsonMapper.builder()
+        .addModule(new com.pippsford.json.jackson3.JsonModule())
+        .build();
+    String json = mapper.writeValueAsString(patch);
+    Patch copy = mapper.readValue(json, Patch.class);
+    assertEquals(patch, copy);
+  }
 
   @Test
   public void testEquals() {

@@ -1,4 +1,4 @@
-package com.pippsford.json.jackson;
+package com.pippsford.json.jackson.objects;
 
 import java.util.Objects;
 import java.util.Random;

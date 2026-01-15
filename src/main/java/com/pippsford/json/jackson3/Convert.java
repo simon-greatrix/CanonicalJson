@@ -1,29 +1,11 @@
-package com.pippsford.json.jackson;
+package com.pippsford.json.jackson3;
 
-import java.io.IOException;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ContainerNode;
-import com.fasterxml.jackson.databind.node.JsonNodeCreator;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.ValueNode;
-import jakarta.json.JsonArray;
-import jakarta.json.JsonException;
-import jakarta.json.JsonNumber;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonString;
-import jakarta.json.JsonStructure;
-import jakarta.json.JsonValue;
 
 import com.pippsford.json.CJArray;
 import com.pippsford.json.CJObject;
@@ -32,6 +14,20 @@ import com.pippsford.json.primitive.CJNull;
 import com.pippsford.json.primitive.CJString;
 import com.pippsford.json.primitive.CJTrue;
 import com.pippsford.json.primitive.numbers.CJNumber;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonException;
+import jakarta.json.JsonNumber;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonString;
+import jakarta.json.JsonStructure;
+import jakarta.json.JsonValue;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ContainerNode;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.JsonNodeType;
+import tools.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ValueNode;
 
 /**
  * A utility class to convert between Jackson's JsonNode and jakarta's JsonValue.
@@ -41,15 +37,6 @@ import com.pippsford.json.primitive.numbers.CJNumber;
 public class Convert {
 
   private static final Map<JsonNodeType, Function<JsonNode, JsonValue>> CONVERTERS;
-
-
-  private static ArrayNode createArrayNode(JsonNodeCreator nodeCreator, JsonArray jsonArray) {
-    ArrayNode arrayNode = nodeCreator.arrayNode(jsonArray.size());
-    for (JsonValue value : jsonArray) {
-      arrayNode.add(toJackson(nodeCreator, value));
-    }
-    return arrayNode;
-  }
 
 
   private static JsonValue createJsonArray(ArrayNode node) {
@@ -64,66 +51,32 @@ public class Convert {
 
   private static JsonValue createJsonObject(ObjectNode node) {
     CJObject object = new CJObject();
-    Iterator<Entry<String, JsonNode>> iterator = node.fields();
-    while (iterator.hasNext()) {
-      Entry<String, JsonNode> entry = iterator.next();
+    for (Entry<String, JsonNode> entry : node.properties()) {
       object.put(entry.getKey(), toJson(entry.getValue()));
     }
     return object;
   }
 
 
-  private static ValueNode createNumberNode(JsonNodeCreator nodeCreator, JsonNumber value) {
-    if (value instanceof CJNumber) {
-      CJNumber number = (CJNumber) value;
+  private static ValueNode createNumberNode(JsonNumber value) {
+    if (value instanceof CJNumber number) {
       switch (number.getNumberType()) {
         case CJNumber.TYPE_INT:
-          return nodeCreator.numberNode(number.intValue());
+          return JsonNodeFactory.instance.numberNode(number.intValue());
         case CJNumber.TYPE_LONG:
-          return nodeCreator.numberNode(number.longValue());
+          return JsonNodeFactory.instance.numberNode(number.longValue());
         case CJNumber.TYPE_BIG_INT:
-          return nodeCreator.numberNode(number.bigIntegerValue());
+          return JsonNodeFactory.instance.numberNode(number.bigIntegerValue());
         case CJNumber.TYPE_DECIMAL:
-          return nodeCreator.numberNode(number.bigDecimalValue());
+          return JsonNodeFactory.instance.numberNode(number.bigDecimalValue().stripTrailingZeros());
         default:
           break;
       }
     }
 
-    return value.isIntegral() ? nodeCreator.numberNode(value.bigIntegerValue()) : nodeCreator.numberNode(value.bigDecimalValue());
-  }
-
-
-  private static ObjectNode createObjectNode(JsonNodeCreator nodeCreator, JsonObject jsonObject) {
-    ObjectNode objectNode = nodeCreator.objectNode();
-    for (Entry<String, JsonValue> entry : jsonObject.entrySet()) {
-      objectNode.set(entry.getKey(), toJackson(nodeCreator, entry.getValue()));
-    }
-    return objectNode;
-  }
-
-
-  /**
-   * Convert a jakarta JsonValue to a Jackson JsonNode.
-   *
-   * @param nodeCreator factory for Jackson nodes
-   * @param value       the value to convert
-   *
-   * @return the Jackson equivalent
-   */
-  public static JsonNode toJackson(JsonNodeCreator nodeCreator, JsonValue value) {
-    if (value == null) {
-      return null;
-    }
-    return switch (value.getValueType()) {
-      case OBJECT -> createObjectNode(nodeCreator, (JsonObject) value);
-      case ARRAY -> createArrayNode(nodeCreator, (JsonArray) value);
-      case STRING -> nodeCreator.textNode(((JsonString) value).getString());
-      case NUMBER -> createNumberNode(nodeCreator, (JsonNumber) value);
-      case NULL -> nodeCreator.nullNode();
-      case TRUE -> nodeCreator.booleanNode(true);
-      case FALSE -> nodeCreator.booleanNode(false);
-    };
+    return value.isIntegral()
+        ? JsonNodeFactory.instance.numberNode(value.bigIntegerValue())
+        : JsonNodeFactory.instance.numberNode(value.bigDecimalValue().stripTrailingZeros());
   }
 
 
@@ -135,7 +88,18 @@ public class Convert {
    * @return the Jackson equivalent
    */
   public static JsonNode toJackson(JsonValue value) {
-    return toJackson(JsonNodeFactory.withExactBigDecimals(false), value);
+    if (value == null) {
+      return null;
+    }
+    return switch (value.getValueType()) {
+      case OBJECT -> toJackson((JsonObject) value);
+      case ARRAY -> toJackson((JsonArray) value);
+      case STRING -> JsonNodeFactory.instance.stringNode(((JsonString) value).getString());
+      case NUMBER -> createNumberNode((JsonNumber) value);
+      case NULL -> JsonNodeFactory.instance.nullNode();
+      case TRUE -> JsonNodeFactory.instance.booleanNode(true);
+      case FALSE -> JsonNodeFactory.instance.booleanNode(false);
+    };
   }
 
 
@@ -147,7 +111,11 @@ public class Convert {
    * @return the Jackson equivalent
    */
   public static ArrayNode toJackson(JsonArray value) {
-    return (ArrayNode) toJackson(JsonNodeFactory.withExactBigDecimals(false), value);
+    ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode(value.size());
+    for (JsonValue v : value) {
+      arrayNode.add(toJackson(v));
+    }
+    return arrayNode;
   }
 
 
@@ -159,7 +127,11 @@ public class Convert {
    * @return the Jackson equivalent
    */
   public static ObjectNode toJackson(JsonObject value) {
-    return (ObjectNode) toJackson(JsonNodeFactory.withExactBigDecimals(false), value);
+    ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
+    for (Entry<String, JsonValue> entry : value.entrySet()) {
+      objectNode.set(entry.getKey(), toJackson(entry.getValue()));
+    }
+    return objectNode;
   }
 
 
@@ -173,7 +145,7 @@ public class Convert {
    */
   @SuppressWarnings("unchecked")
   public static <T extends ContainerNode<T>> ContainerNode<T> toJackson(JsonStructure value) {
-    return (ContainerNode<T>) toJackson(JsonNodeFactory.withExactBigDecimals(false), value);
+    return (ContainerNode<T>) toJackson((JsonValue) value);
   }
 
 
@@ -236,20 +208,11 @@ public class Convert {
     Map<JsonNodeType, Function<JsonNode, JsonValue>> map = new EnumMap<>(JsonNodeType.class);
     map.put(JsonNodeType.OBJECT, n -> createJsonObject((ObjectNode) n));
     map.put(JsonNodeType.ARRAY, n -> createJsonArray((ArrayNode) n));
-    map.put(JsonNodeType.STRING, n -> CJString.create(n.textValue()));
+    map.put(JsonNodeType.STRING, n -> CJString.create(n.stringValue()));
     map.put(JsonNodeType.BOOLEAN, n -> n.booleanValue() ? CJTrue.TRUE : CJFalse.FALSE);
     map.put(JsonNodeType.NULL, n -> CJNull.NULL);
     map.put(JsonNodeType.NUMBER, n -> CJNumber.cast(n.numberValue()));
-
-    map.put(
-        JsonNodeType.BINARY, n -> {
-          try {
-            return CJString.create(Base64.getEncoder().encodeToString(n.binaryValue()));
-          } catch (IOException ioe) {
-            throw new JsonException("Jackson failure", ioe);
-          }
-        }
-    );
+    map.put(JsonNodeType.BINARY, n -> CJString.create(Base64.getEncoder().encodeToString(n.binaryValue())));
 
     // Unsupported types
     map.put(

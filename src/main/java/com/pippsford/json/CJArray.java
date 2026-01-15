@@ -92,6 +92,7 @@ import jakarta.json.JsonValue;
  * for a narrowing primitive conversion, rather than throwing a <code>IncorrectTypeException</code>.
  */
 @JsonSerialize(using = JsonArraySerializer.class)
+@tools.jackson.databind.annotation.JsonSerialize(using = com.pippsford.json.jackson3.JsonArraySerializer.class)
 public class CJArray implements JsonArray, CJStructure, Canonical {
 
   static class MyIterator implements ListIterator<JsonValue> {

@@ -3,7 +3,6 @@ package com.pippsford.json.primitive;
 import java.util.Objects;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
 import com.pippsford.json.Canonical;
 import com.pippsford.json.jackson.CJBaseSerializer;
 
@@ -11,6 +10,7 @@ import com.pippsford.json.jackson.CJBaseSerializer;
  * Representation of a value in a JSON object or array.
  */
 @JsonSerialize(using = CJBaseSerializer.class)
+@tools.jackson.databind.annotation.JsonSerialize(using = com.pippsford.json.jackson3.CJBaseSerializer.class)
 public abstract class CJBase implements Canonical {
 
   /**

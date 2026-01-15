@@ -68,8 +68,10 @@ dependencies {
   compileOnly group: 'jakarta.annotation', name: 'jakarta.annotation-api', version: '3.0.0'
   compileOnly group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.20.1'
   compileOnly group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.20.1'
-  compileOnly group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: '3.3.4'
-  compileOnly group: 'org.springframework', name: 'spring-webmvc', version: '6.2.5'
+  compileOnly group: 'tools.jackson.core', name: 'jackson-core', version: '3.0.3'
+  compileOnly group: 'tools.jackson.core', name: 'jackson-databind', version: '3.0.3'
+  compileOnly group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: '4.0.1'
+  compileOnly group: 'org.springframework', name: 'spring-webmvc', version: '7.0.2'
   compileOnly group: 'com.github.spotbugs', name: 'spotbugs-annotations', version: '4.2.0'
 
   testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.2.4'

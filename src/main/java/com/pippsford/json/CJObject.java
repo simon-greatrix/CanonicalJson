@@ -101,6 +101,7 @@ import jakarta.json.JsonValue;
  */
 
 @JsonSerialize(using = JsonObjectSerializer.class)
+@tools.jackson.databind.annotation.JsonSerialize(using = com.pippsford.json.jackson3.JsonObjectSerializer.class)
 public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJStructure, Canonical {
 
   /**
