@@ -268,7 +268,11 @@ public class CanonicalGenerator extends GeneratorBase {
 
   @Override
   public JacksonFeatureSet<StreamWriteCapability> streamWriteCapabilities() {
-    return JacksonFeatureSet.fromBitmask(DEFAULT_STREAM_FEATURES);
+    // There are two capabilities defined:
+    // 1 - CAN_WRITE_BINARY_NATIVELY : this causes data to be written as base 64 wherever possible. This generally defeats the purpose and Jackson's JSON
+    // does not declare it.
+    // 2- CAN_WRITE_FORMATTED_NUMBERS : Jackson3 never checks this capability, so it is unclear what it precisely does.
+    return JacksonFeatureSet.fromBitmask(0);
   }
 
 
