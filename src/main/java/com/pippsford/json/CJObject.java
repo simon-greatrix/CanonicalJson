@@ -29,12 +29,14 @@ import java.util.function.ToLongFunction;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.pippsford.json.CJArray.MySpliterator;
 import com.pippsford.json.builder.ObjectBuilder;
 import com.pippsford.json.exception.IncorrectTypeException;
 import com.pippsford.json.exception.MissingItemException;
 import com.pippsford.json.io.Generator;
+import com.pippsford.json.jackson.JsonObjectDeserializer;
 import com.pippsford.json.jackson.JsonObjectSerializer;
 import com.pippsford.json.primitive.CJFalse;
 import com.pippsford.json.primitive.CJNull;
@@ -99,9 +101,10 @@ import jakarta.json.JsonValue;
  * call {@link #getInt(String)} and the value is the Long value 1L&lt;&lt;50, then the call returns the value of Integer.MAX_VALUE, as would be expected
  * for a narrowing primitive conversion, rather than throwing a {@link IncorrectTypeException}.
  */
-
 @JsonSerialize(using = JsonObjectSerializer.class)
+@JsonDeserialize(using = JsonObjectDeserializer.class)
 @tools.jackson.databind.annotation.JsonSerialize(using = com.pippsford.json.jackson3.JsonObjectSerializer.class)
+@tools.jackson.databind.annotation.JsonDeserialize(using = com.pippsford.json.jackson3.JsonObjectDeserializer.class)
 public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJStructure, Canonical {
 
   /**

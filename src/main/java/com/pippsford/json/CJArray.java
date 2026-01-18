@@ -93,6 +93,7 @@ import jakarta.json.JsonValue;
  */
 @JsonSerialize(using = JsonArraySerializer.class)
 @tools.jackson.databind.annotation.JsonSerialize(using = com.pippsford.json.jackson3.JsonArraySerializer.class)
+@tools.jackson.databind.annotation.JsonDeserialize(using = com.pippsford.json.jackson3.JsonArrayDeserializer.class)
 public class CJArray implements JsonArray, CJStructure, Canonical {
 
   static class MyIterator implements ListIterator<JsonValue> {
