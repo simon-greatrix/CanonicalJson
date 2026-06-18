@@ -1,6 +1,7 @@
 package com.pippsford.json;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -190,6 +191,124 @@ public class CanonicalTest {
     assertEquals("\"abc\"", CJString.create("abc").toString());
     assertEquals("true", Canonical.TRUE.toString());
     assertEquals("5.0E-1", CJNumber.cast(0.5).toString());
+  }
+
+
+  @Test
+  public void testGetValueWithTypeAndDefault() {
+    JsonValue strVal = CJString.create("hello");
+    // type matches: value is returned
+    assertEquals("hello", Canonical.getValue(String.class, strVal, "default"));
+    // type doesn't match: default (null here) is returned
+    assertNull(Canonical.getValue(Number.class, strVal, null));
+  }
+
+
+  @Test
+  public void testGetValueWithTypeAndDefaultWhenNull() {
+    assertEquals("default", Canonical.getValue(String.class, null, "default"));
+  }
+
+
+  @Test
+  public void testGetValueWithTypeAndDefaultJsonNull() {
+    assertEquals("default", Canonical.getValue(String.class, JsonValue.NULL, "default"));
+  }
+
+
+  @Test
+  public void testIsArray() {
+    assertTrue(Canonical.isArray(JsonValue.EMPTY_JSON_ARRAY));
+    assertFalse(Canonical.isArray(JsonValue.EMPTY_JSON_OBJECT));
+    assertFalse(Canonical.isArray(JsonValue.TRUE));
+    assertFalse(Canonical.isArray(null));
+  }
+
+
+  @Test
+  public void testIsBoolean() {
+    assertTrue(Canonical.isBoolean(JsonValue.TRUE));
+    assertTrue(Canonical.isBoolean(JsonValue.FALSE));
+    assertFalse(Canonical.isBoolean(JsonValue.NULL));
+    assertFalse(Canonical.isBoolean(JsonValue.EMPTY_JSON_ARRAY));
+    assertFalse(Canonical.isBoolean(null));
+  }
+
+
+  @Test
+  public void testIsNull() {
+    assertTrue(Canonical.isNull(JsonValue.NULL));
+    assertFalse(Canonical.isNull(JsonValue.TRUE));
+    assertFalse(Canonical.isNull(JsonValue.EMPTY_JSON_ARRAY));
+    assertFalse(Canonical.isNull(null));
+  }
+
+
+  @Test
+  public void testIsNumber() {
+    assertTrue(Canonical.isNumber(CJNumber.create(42)));
+    assertFalse(Canonical.isNumber(JsonValue.TRUE));
+    assertFalse(Canonical.isNumber(JsonValue.NULL));
+    assertFalse(Canonical.isNumber(null));
+  }
+
+
+  @Test
+  public void testIsObject() {
+    assertTrue(Canonical.isObject(JsonValue.EMPTY_JSON_OBJECT));
+    assertFalse(Canonical.isObject(JsonValue.EMPTY_JSON_ARRAY));
+    assertFalse(Canonical.isObject(JsonValue.FALSE));
+    assertFalse(Canonical.isObject(null));
+  }
+
+
+  @Test
+  public void testIsString() {
+    assertTrue(Canonical.isString(CJString.create("x")));
+    assertFalse(Canonical.isString(JsonValue.NULL));
+    assertFalse(Canonical.isString(JsonValue.EMPTY_JSON_ARRAY));
+    assertFalse(Canonical.isString(null));
+  }
+
+
+  @Test
+  public void testToCanonicalStringNull() {
+    assertEquals("null", Canonical.toCanonicalString(null));
+  }
+
+
+  @Test
+  public void testToCanonicalStringPrimitive() {
+    assertEquals("\"hello\"", Canonical.toCanonicalString(CJString.create("hello")));
+  }
+
+
+  @Test
+  public void testToCanonicalStringArray() {
+    CJArray array = new CJArray(java.util.Arrays.asList(1, 2, 3));
+    assertEquals("[1,2,3]", Canonical.toCanonicalString(array));
+  }
+
+
+  @Test
+  public void testToPrettyStringNull() {
+    assertEquals("null", Canonical.toPrettyString(null));
+  }
+
+
+  @Test
+  public void testToPrettyStringPrimitive() {
+    assertEquals("\"hello\"", Canonical.toPrettyString(CJString.create("hello")));
+  }
+
+
+  @Test
+  public void testToPrettyStringArrayHasNewlines() {
+    // Use values large enough to exceed the 30-char small-structure threshold
+    CJArray array = new CJArray(java.util.Arrays.asList(1000000, 2000000, 3000000, 4000000));
+    String pretty = Canonical.toPrettyString(array);
+    assertTrue(pretty.contains("\n"), "pretty output should contain newlines");
+    assertTrue(pretty.contains("1000000") && pretty.contains("4000000"));
   }
 
 }
