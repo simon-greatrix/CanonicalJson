@@ -75,16 +75,12 @@ public abstract class Test extends PatchOperation {
     if (resultOfAdd != null) {
       flags |= 4;
     }
-    switch (flags) {
-      case 1:
-        return new TestValue(path, value);
-      case 2:
-        return new TestDigest(path, digest.getString("algorithm"), digest.getString("value"));
-      case 4:
-        return new TestResult(path, resultOfAdd);
-      default:
-        throw new IllegalArgumentException("Test case must specify exactly one of 'value', 'digest', or 'resultOfAdd'");
-    }
+    return switch (flags) {
+      case 1 -> new TestValue(path, value);
+      case 2 -> new TestDigest(path, digest.getString("algorithm"), digest.getString("value"));
+      case 4 -> new TestResult(path, resultOfAdd);
+      default -> throw new IllegalArgumentException("Test case must specify exactly one of 'value', 'digest', or 'resultOfAdd'");
+    };
   }
 
 
@@ -245,14 +241,13 @@ public abstract class Test extends PatchOperation {
     if (this == o) {
       return true;
     }
-    if (!(o instanceof Test)) {
+    if (!(o instanceof Test test)) {
       return false;
     }
     if (!super.equals(o)) {
       return false;
     }
 
-    Test test = (Test) o;
     return Objects.equals(getType(), test.getType()) && Objects.equals(getCriteria(), test.getCriteria());
   }
 

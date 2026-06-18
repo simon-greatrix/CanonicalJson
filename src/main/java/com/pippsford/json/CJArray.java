@@ -1,11 +1,28 @@
 package com.pippsford.json;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.pippsford.json.builder.ArrayBuilder;
+import com.pippsford.json.exception.IncorrectTypeException;
+import com.pippsford.json.exception.MissingItemException;
+import com.pippsford.json.io.Generator;
+import com.pippsford.json.jackson.JsonArraySerializer;
+import com.pippsford.json.primitive.CJBoolean;
+import com.pippsford.json.primitive.CJNull;
+import com.pippsford.json.primitive.CJString;
+import com.pippsford.json.primitive.CJTrue;
+import com.pippsford.json.primitive.numbers.CJNumber;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonValue;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Objects;
+import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -24,24 +42,6 @@ import java.util.function.IntUnaryOperator;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
-
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.pippsford.json.builder.ArrayBuilder;
-import com.pippsford.json.exception.IncorrectTypeException;
-import com.pippsford.json.exception.MissingItemException;
-import com.pippsford.json.io.Generator;
-import com.pippsford.json.jackson.JsonArraySerializer;
-import com.pippsford.json.primitive.CJNull;
-import com.pippsford.json.primitive.CJString;
-import com.pippsford.json.primitive.CJTrue;
-import com.pippsford.json.primitive.numbers.CJNumber;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
-import jakarta.json.JsonArray;
-import jakarta.json.JsonNumber;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonString;
-import jakarta.json.JsonValue;
 
 /**
  * Representation of an array in JSON.
@@ -95,6 +95,11 @@ import jakarta.json.JsonValue;
 @tools.jackson.databind.annotation.JsonSerialize(using = com.pippsford.json.jackson3.JsonArraySerializer.class)
 @tools.jackson.databind.annotation.JsonDeserialize(using = com.pippsford.json.jackson3.JsonArrayDeserializer.class)
 public class CJArray implements JsonArray, CJStructure, Canonical {
+
+  /** An unmodifiable empty object. */
+  public static final CJArray EMPTY = new CJArray().unmodifiable();
+
+
 
   static class MyIterator implements ListIterator<JsonValue> {
 
@@ -219,7 +224,9 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
    *
    * @return the JsonArray
    */
-  public static CJArray asArray(Collection<?> c) {
+  public static CJArray asArray(@Nonnull Collection<?> c) {
+    Objects.requireNonNull(c);
+
     if (c instanceof CJArray) {
       return (CJArray) c;
     }
@@ -238,7 +245,7 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
    *
    * @return the
    */
-  public static CJArray asArrayFromArray(Object value) {
+  public static CJArray asArrayFromArray(@Nonnull Object value) {
     Objects.requireNonNull(value);
     if (!value.getClass().isArray()) {
       throw new IllegalArgumentException("Value " + value.getClass() + " is not an array");
@@ -282,7 +289,6 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
     return list;
   }
 
-
   /** The backing list. */
   private final List<Canonical> myList;
 
@@ -315,6 +321,11 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
 
   private CJArray(CJArray jsonValues, int fromIndex, int toIndex) {
     myList = jsonValues.myList.subList(fromIndex, toIndex);
+  }
+
+
+  private CJArray(List<Canonical> list) {
+    myList = list;
   }
 
 
@@ -448,6 +459,17 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
 
 
   /**
+   * An iterator across the canonical representation of the values in this.
+   *
+   * @return the iterator
+   */
+  @Nonnull
+  public Iterator<Canonical> canonicalIterator() {
+    return canonicalListIterator(0);
+  }
+
+
+  /**
    * A list iterator across the canonical representation of the values in this.
    *
    * @return the list iterator
@@ -466,6 +488,24 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
    */
   public ListIterator<Canonical> canonicalListIterator(int index) {
     return myList.listIterator(index);
+  }
+
+
+  @Nonnull
+  public Stream<Canonical> canonicalParallelStream() {
+    return myList.parallelStream();
+  }
+
+
+  @Nonnull
+  public Spliterator<Canonical> canonicalSpliterator() {
+    return myList.spliterator();
+  }
+
+
+  @Nonnull
+  public Stream<Canonical> canonicalStream() {
+    return myList.stream();
   }
 
 
@@ -530,7 +570,7 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
 
 
   @Override
-  public JsonValue get(int index) {
+  public Canonical get(int index) {
     return myList.get(index);
   }
 
@@ -543,8 +583,12 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
    *
    * @return the array, or the default
    */
-  public JsonArray getArray(int index, IntFunction<JsonArray> defaultValue) {
-    return getQuiet(JsonArray.class, index, defaultValue);
+  public CJArray getArray(int index, IntFunction<JsonArray> defaultValue) {
+    IntFunction<CJArray> function = x -> {
+      JsonArray array = defaultValue.apply(x);
+      return array != null ? asArray(array) : null;
+    };
+    return getQuiet(CJArray.class, index, function);
   }
 
 
@@ -556,8 +600,9 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
    *
    * @return the array, or the default
    */
-  public JsonArray getArray(int index, JsonArray defaultValue) {
-    return getQuiet(JsonArray.class, index, defaultValue);
+  public CJArray getArray(int index, JsonArray defaultValue) {
+    CJArray defaultArray = defaultValue != null ? asArray(defaultValue) : null;
+    return getQuiet(CJArray.class, index, defaultArray);
   }
 
 
@@ -569,8 +614,8 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
    * @return the array
    */
   @Nonnull
-  public JsonArray getArray(int index) {
-    return getSafe(JsonArray.class, ValueType.ARRAY, index);
+  public CJArray getArray(int index) {
+    return getSafe(CJArray.class, ValueType.ARRAY, index);
   }
 
 
@@ -827,26 +872,46 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
 
 
   @Override
-  public JsonArray getJsonArray(int index) {
-    return getArray(index);
+  public CJArray getJsonArray(int index) {
+    return optJsonSafe(CJArray.class, ValueType.ARRAY, index);
+  }
+
+
+  /**
+   * Returns the Boolean value to which the specified index is mapped. This is a convenience method for
+   * (CJBoolean)get(index) to get the value.
+   *
+   * @param index the index whose associated value is to be returned
+   *
+   * @return the Boolean value to which the specified index is mapped, or null if this object contains no mapping for the name
+   * @throws IncorrectTypeException if the value to which the specified index is mapped is not assignable to JsonTrue
+   *                                or JsonFalse types
+   */
+  public CJBoolean getJsonBoolean(int index) {
+    Canonical canonical = get(index);
+    if (canonical instanceof CJBoolean cjBoolean) {
+      return cjBoolean;
+    }
+    throw new IncorrectTypeException(index, Set.of(ValueType.TRUE, ValueType.FALSE), canonical.getValueType());
+
   }
 
 
   @Override
-  public JsonNumber getJsonNumber(int index) {
-    return (JsonNumber) myList.get(index);
+  public CJNumber getJsonNumber(int index) {
+    return optJsonSafe(CJNumber.class, ValueType.NUMBER, index);
   }
 
 
   @Override
-  public JsonObject getJsonObject(int index) {
-    return getObject(index);
+  public CJObject getJsonObject(int index) {
+    return optJsonSafe(CJObject.class, ValueType.OBJECT, index);
   }
 
 
   @Override
-  public JsonString getJsonString(int index) {
-    return (JsonString) myList.get(index);
+  public CJString getJsonString(int index) {
+    return optJsonSafe(CJString.class, ValueType.STRING, index);
   }
 
 
@@ -899,8 +964,12 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
    *
    * @return the object, or the default
    */
-  public JsonObject getObject(int index, IntFunction<JsonObject> defaultValue) {
-    return getQuiet(JsonObject.class, index, defaultValue);
+  public CJObject getObject(int index, IntFunction<JsonObject> defaultValue) {
+    IntFunction<CJObject> defaultObject = x -> {
+      JsonObject object = defaultValue.apply(x);
+      return object != null ? CJObject.asObject(object) : null;
+    };
+    return getQuiet(CJObject.class, index, defaultObject);
   }
 
 
@@ -912,8 +981,9 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
    *
    * @return the object, or the default
    */
-  public JsonObject getObject(int index, JsonObject defaultValue) {
-    return getQuiet(JsonObject.class, index, defaultValue);
+  public CJObject getObject(int index, JsonObject defaultValue) {
+    CJObject defaultObject = (defaultValue != null) ? CJObject.asObject(defaultValue) : null;
+    return getQuiet(CJObject.class, index, defaultObject);
   }
 
 
@@ -925,8 +995,8 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
    * @return the object
    */
   @Nonnull
-  public JsonObject getObject(int index) {
-    return getSafe(JsonObject.class, ValueType.OBJECT, index);
+  public CJObject getObject(int index) {
+    return getSafe(CJObject.class, ValueType.OBJECT, index);
   }
 
 
@@ -1109,8 +1179,8 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
    * @return the array, or null
    */
   @Nullable
-  public JsonArray optArray(int index) {
-    return getQuiet(JsonArray.class, index);
+  public CJArray optArray(int index) {
+    return getQuiet(CJArray.class, index);
   }
 
 
@@ -1186,6 +1256,15 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
   }
 
 
+  private <T extends Canonical> T optJsonSafe(Class<T> clazz, ValueType type, int index) {
+    Canonical canonical = myList.get(index);
+    if (clazz.isInstance(canonical)) {
+      return clazz.cast(canonical);
+    }
+    throw new IncorrectTypeException(index, type, canonical.getValueType());
+  }
+
+
   /**
    * Get a long from the array.
    *
@@ -1208,8 +1287,8 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
    * @return the object, or null
    */
   @Nullable
-  public JsonObject optObject(int index) {
-    return getQuiet(JsonObject.class, index);
+  public CJObject optObject(int index) {
+    return getQuiet(CJObject.class, index);
   }
 
 
@@ -1234,7 +1313,7 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
    * @return the primitive or null.
    */
   @Nullable
-  public JsonValue optValue(int i) {
+  public Canonical optValue(int i) {
     if (i < 0 || size() <= i) {
       return null;
     }
@@ -1286,7 +1365,7 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
 
 
   @Override
-  public JsonValue remove(int index) {
+  public Canonical remove(int index) {
     return myList.remove(index);
   }
 
@@ -1333,7 +1412,7 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
 
   @Override
   @Nonnull
-  public JsonValue set(int index, JsonValue element) {
+  public Canonical set(int index, JsonValue element) {
     return myList.set(index, Canonical.cast(element));
   }
 
@@ -1347,7 +1426,7 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
    * @return the old value
    */
   @Nonnull
-  public JsonValue set(int index, Boolean value) {
+  public Canonical set(int index, Boolean value) {
     return myList.set(index, CJTrue.valueOf(value));
   }
 
@@ -1361,7 +1440,7 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
    * @return the old value
    */
   @Nonnull
-  public JsonValue set(int index, Number number) {
+  public Canonical set(int index, Number number) {
     Canonical p = (number != null) ? CJNumber.cast(number) : CJNull.NULL;
     return myList.set(index, p);
   }
@@ -1376,7 +1455,7 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
    * @return the old value
    */
   @Nonnull
-  public JsonValue set(int index, String string) {
+  public Canonical set(int index, String string) {
     Canonical p = (string != null) ? CJString.create(string) : CJNull.NULL;
     return myList.set(index, p);
   }
@@ -1390,7 +1469,7 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
    * @return the old value
    */
   @Nonnull
-  public JsonValue setNull(int index) {
+  public Canonical setNull(int index) {
     return myList.set(index, CJNull.NULL);
   }
 
@@ -1423,7 +1502,7 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
 
   @Override
   @Nonnull
-  public List<JsonValue> subList(int fromIndex, int toIndex) {
+  public CJArray subList(int fromIndex, int toIndex) {
     return new CJArray(this, fromIndex, toIndex);
   }
 
@@ -1479,6 +1558,16 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
   @Override
   public String toString() {
     return CanonicalJsonProvider.isToStringPretty ? toPrettyString() : toCanonicalString();
+  }
+
+
+  /**
+   * Create an unmodifiable wrapper for the data in this.
+   *
+   * @return an unmodifiable view onto the same data
+   */
+  public CJArray unmodifiable() {
+    return new CJArray(Collections.unmodifiableList(myList));
   }
 
 

@@ -4,15 +4,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.GZIPInputStream;
-
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -138,7 +139,17 @@ class IJsonNumberSerializerTest {
       "1000000100000002,1.2882309824710572e-231",
       "1000000100000003,1.2882309824710575e-231",
       "1000000100000004,1.2882309824710577e-231",
-      "1000000100000005,1.288230982471058e-231"
+      "1000000100000005,1.288230982471058e-231",
+      "c352bd2668e077c4,-21098088986959630",
+      "43718ff6c1f7b042,79093833328690200",
+      "c38e48d60241201c,-272778665578988400",
+      "435e7b1880af3ec4,34318377878878990",
+      "439f8f297f47e1a0,568520490872236000",
+      "c353cf79d4e92a4a,-22304586910181670",
+      "c3566054436b4648,-25193458049030430",
+      "439dd588a0c19fd0,537443655290975200",
+      "4355ea68ccd01312,24674841378442310",
+      "c35a1d16643e85f6,-29401325611128790"
   })
   void testBits(String longBits, String json) throws IOException {
     long l = new BigInteger(longBits, 16).longValue();
@@ -157,6 +168,11 @@ class IJsonNumberSerializerTest {
     assertThrows(ForbiddenIJsonException.class, () -> IJsonNumberSerializer.serialize(Double.NaN));
     assertThrows(ForbiddenIJsonException.class, () -> IJsonNumberSerializer.serialize(Double.POSITIVE_INFINITY));
     assertThrows(ForbiddenIJsonException.class, () -> IJsonNumberSerializer.serialize(Double.NEGATIVE_INFINITY));
+
+    OutputStream out = OutputStream.nullOutputStream();
+    assertThrows(ForbiddenIJsonException.class, () -> IJsonNumberSerializer.serialize(out, Double.NaN));
+    assertThrows(ForbiddenIJsonException.class, () -> IJsonNumberSerializer.serialize(out, Double.POSITIVE_INFINITY));
+    assertThrows(ForbiddenIJsonException.class, () -> IJsonNumberSerializer.serialize(out, Double.NEGATIVE_INFINITY));
   }
 
 
@@ -225,6 +241,14 @@ class IJsonNumberSerializerTest {
         d *= 10;
       }
     }
+  }
+
+
+  @Test
+  void testZero() throws IOException {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    IJsonNumberSerializer.serialize(baos, 0.0);
+    assertEquals("0", baos.toString(StandardCharsets.UTF_8));
   }
 
 }

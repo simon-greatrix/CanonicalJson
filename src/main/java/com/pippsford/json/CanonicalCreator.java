@@ -72,24 +72,16 @@ class CanonicalCreator {
     if (value instanceof Canonical) {
       return (Canonical) value;
     }
-    switch (value.getValueType()) {
-      case ARRAY:
-        return CJArray.asArray(value.asJsonArray());
-      case FALSE:
-        return CJFalse.FALSE;
-      case NUMBER:
-        return CJNumber.castUnsafe(((JsonNumber) value).numberValue());
-      case NULL:
-        return CJNull.NULL;
-      case OBJECT:
-        return CJObject.asJObject(value.asJsonObject());
-      case STRING:
-        return CJString.create(((JsonString) value).getString());
-      case TRUE:
-        return CJTrue.TRUE;
-      default:
-        throw new NotJsonException("Unknown Json Value type:" + value.getValueType());
-    }
+    return switch (value.getValueType()) {
+      case ARRAY -> CJArray.asArray(value.asJsonArray());
+      case FALSE -> CJFalse.FALSE;
+      case NUMBER -> CJNumber.castUnsafe(((JsonNumber) value).numberValue());
+      case NULL -> CJNull.NULL;
+      case OBJECT -> CJObject.asObject(value.asJsonObject());
+      case STRING -> CJString.create(((JsonString) value).getString());
+      case TRUE -> CJTrue.TRUE;
+      default -> throw new NotJsonException("Unknown Json Value type:" + value.getValueType());
+    };
   }
 
 
@@ -266,7 +258,7 @@ class CanonicalCreator {
         new CreateOp() {
           @Override
           Canonical create(Object value) {
-            return CJObject.asJObject((Map<?, ?>) value);
+            return CJObject.asObject((Map<?, ?>) value);
           }
 
 

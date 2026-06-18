@@ -59,16 +59,6 @@ public final class IJsonNumberSerializer {
   private static final int[][] POW5_SPLIT = new int[POS_TABLE_SIZE][4];
 
 
-  /** Precomputed powers of 10 from 10^0 to 10^18. */
-  private static final long[] POWERS_OF_TEN = {
-      0L, 10L, 100L, 1_000L, 10_000L, 100_000L, 1_000_000L,
-      10_000_000L, 100_000_000L, 1_000_000_000L,
-      10_000_000_000L, 100_000_000_000L, 1_000_000_000_000L,
-      10_000_000_000_000L, 100_000_000_000_000L, 1_000_000_000_000_000L,
-      10_000_000_000_000_000L, 100_000_000_000_000_000L, 1_000_000_000_000_000_000L
-  };
-
-
   /**
    * Optimised lookup for the number of digits required for a positive long.
    *
@@ -296,11 +286,11 @@ public final class IJsonNumberSerializer {
     if (value == 0.0) {
       return "0";
     }
-    if (! Double.isFinite(value)) {
+    if (!Double.isFinite(value)) {
       throw new ForbiddenIJsonException("NaN/Infinity not allowed in JSON");
     }
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
 
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
     try {
       serialize(out, value);
     } catch (IOException e) {

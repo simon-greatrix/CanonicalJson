@@ -1,10 +1,32 @@
 package com.pippsford.json;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.pippsford.json.CJArray.MySpliterator;
+import com.pippsford.json.builder.ObjectBuilder;
+import com.pippsford.json.exception.IncorrectTypeException;
+import com.pippsford.json.exception.MissingItemException;
+import com.pippsford.json.io.Generator;
+import com.pippsford.json.jackson.JsonObjectDeserializer;
+import com.pippsford.json.jackson.JsonObjectSerializer;
+import com.pippsford.json.primitive.CJBoolean;
+import com.pippsford.json.primitive.CJFalse;
+import com.pippsford.json.primitive.CJNull;
+import com.pippsford.json.primitive.CJString;
+import com.pippsford.json.primitive.CJTrue;
+import com.pippsford.json.primitive.CodePointOrder;
+import com.pippsford.json.primitive.numbers.CJNumber;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonValue;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -13,7 +35,6 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.Spliterator;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
@@ -29,36 +50,14 @@ import java.util.function.ToLongFunction;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.pippsford.json.CJArray.MySpliterator;
-import com.pippsford.json.builder.ObjectBuilder;
-import com.pippsford.json.exception.IncorrectTypeException;
-import com.pippsford.json.exception.MissingItemException;
-import com.pippsford.json.io.Generator;
-import com.pippsford.json.jackson.JsonObjectDeserializer;
-import com.pippsford.json.jackson.JsonObjectSerializer;
-import com.pippsford.json.primitive.CJFalse;
-import com.pippsford.json.primitive.CJNull;
-import com.pippsford.json.primitive.CJString;
-import com.pippsford.json.primitive.CJTrue;
-import com.pippsford.json.primitive.CodePointOrder;
-import com.pippsford.json.primitive.numbers.CJNumber;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
-import jakarta.json.JsonArray;
-import jakarta.json.JsonNumber;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonString;
-import jakarta.json.JsonValue;
-
 /**
  * Representation of an object in JSON.
  *
- * <p>No value in the object can be null. If you try to add one, it will be replaced by a Canonical instance holding a null.
+ * <p>No value in the object can be null. If you try to add one, it will be replaced by a Canonical instance holding a
+ * null.
  *
- * <p>As JSON objects can contain mixed content, this class provides type-checking accessors to the object members. There are multiple varieties of each
+ * <p>As JSON objects can contain mixed content, this class provides type-checking accessors to the object members.
+ * There are multiple varieties of each
  * accessor which obey these contracts:
  *
  * <dl>
@@ -107,6 +106,11 @@ import jakarta.json.JsonValue;
 @tools.jackson.databind.annotation.JsonDeserialize(using = com.pippsford.json.jackson3.JsonObjectDeserializer.class)
 public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJStructure, Canonical {
 
+  /** An unmodifiable empty object. */
+  public static final CJObject EMPTY = new CJObject().unmodifiable();
+
+
+
   /**
    * Set which converts JsonValue to Canonicals.
    */
@@ -140,10 +144,9 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
 
     @Override
     public boolean contains(Object o) {
-      if (!(o instanceof Entry<?, ?>)) {
+      if (!(o instanceof Entry<?, ?> e)) {
         return false;
       }
-      Entry<?, ?> e = (Entry<?, ?>) o;
       if (!(e.getKey() instanceof String)) {
         return false;
       }
@@ -349,7 +352,8 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
 
 
   /**
-   * Spliterator over JsonValues instead of Canonical. If someone called setValue on the output, we have to convert to a Canonical.
+   * Spliterator over JsonValues instead of Canonical. If someone called setValue on the output, we have to convert to
+   * a Canonical.
    */
   static class MyEntrySpliterator implements Spliterator<Entry<String, JsonValue>> {
 
@@ -399,14 +403,7 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
 
 
 
-  private static class MyValues implements Collection<JsonValue> {
-
-    private final Collection<Canonical> me;
-
-
-    MyValues(Collection<Canonical> me) {
-      this.me = me;
-    }
+  private record MyValues(Collection<Canonical> me) implements Collection<JsonValue> {
 
 
     public boolean add(JsonValue value) {
@@ -548,7 +545,7 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
    *
    * @return the equivalent JObject
    */
-  public static CJObject asJObject(Map<?, ?> map) {
+  public static CJObject asObject(Map<?, ?> map) {
     if (map instanceof CJObject) {
       return (CJObject) map;
     }
@@ -605,14 +602,26 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
 
 
   private CJObject(NavigableMap<String, Canonical> map, boolean makeCopy) {
+    this(map, makeCopy, Function.identity());
+  }
+
+
+  private CJObject(
+      NavigableMap<String, Canonical> map,
+      boolean makeCopy,
+      Function<NavigableMap<String, Canonical>, NavigableMap<String, Canonical>> mapper
+  ) {
+    NavigableMap<String, Canonical> tmpMap;
     if (makeCopy) {
-      myMap = new TreeMap<>(CodePointOrder.INSTANCE);
+      tmpMap = new TreeMap<>(CodePointOrder.INSTANCE);
       for (Entry<String, Canonical> e : map.entrySet()) {
-        myMap.put(e.getKey(), e.getValue().copy());
+        tmpMap.put(e.getKey(), e.getValue().copy());
       }
     } else {
-      myMap = map;
+      tmpMap = map;
     }
+
+    myMap = mapper.apply(tmpMap);
   }
 
 
@@ -623,12 +632,83 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
 
 
   /**
+   * Get the ceiling entry where the value is an instance of {@link Canonical}.
+   *
+   * @param key the key search for
+   *
+   * @return the entry, or null
+   */
+  public Entry<String, Canonical> canonicalCeilingEntry(String key) {
+    return myMap.ceilingEntry(key);
+  }
+
+
+  @Nonnull
+  public Set<Entry<String, Canonical>> canonicalEntrySet() {
+    return myMap.entrySet();
+  }
+
+
+  /**
+   * Get the first entry in the map, with the value as a {@link Canonical}
+   *
+   * @return the first entry
+   */
+  public Entry<String, Canonical> canonicalFirstEntry() {
+    return myMap.firstEntry();
+  }
+
+
+  /**
+   * Get the floor entry for the given key in the map, with the value as a {@link Canonical}
+   *
+   * @param key the key to search for
+   *
+   * @return the first entry
+   */
+  public Entry<String, Canonical> canonicalFloorEntry(String key) {
+    return myMap.floorEntry(key);
+  }
+
+
+  /**
    * Offer every mapping in this JSON object to the consumer.
    *
    * @param action the consumer
    */
   public void canonicalForEach(BiConsumer<? super String, ? super Canonical> action) {
     myMap.forEach(action);
+  }
+
+
+  public Entry<String, Canonical> canonicalHigherEntry(String key) {
+    return myMap.higherEntry(key);
+  }
+
+
+  public Entry<String, Canonical> canonicalLastEntry() {
+    return myMap.lastEntry();
+  }
+
+
+  public Entry<String, Canonical> canonicalLowerEntry(String key) {
+    return myMap.lowerEntry(key);
+  }
+
+
+  public Entry<String, Canonical> canonicalPollFirstEntry() {
+    return myMap.pollFirstEntry();
+  }
+
+
+  public Entry<String, Canonical> canonicalPollLastEntry() {
+    return myMap.pollLastEntry();
+  }
+
+
+  @Nonnull
+  public Collection<Canonical> canonicalValues() {
+    return myMap.values();
   }
 
 
@@ -657,22 +737,27 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
 
 
   @Override
-  public Canonical compute(String key, @Nonnull BiFunction<? super String, ? super JsonValue, ? extends JsonValue> remappingFunction) {
-    final BiFunction<String, Canonical, Canonical> myFunction = (k, v) -> Canonical.cast(remappingFunction.apply(k, v));
+  public Canonical compute(
+      String key, @Nonnull BiFunction<? super String, ? super JsonValue, ? extends JsonValue> remappingFunction) {
+    final BiFunction<String, Canonical, Canonical> myFunction = (k, v) -> Canonical.cast(
+        remappingFunction.apply(k, v));
     return myMap.compute(key, myFunction);
   }
 
 
   @Override
-  public Canonical computeIfAbsent(String key, @Nonnull Function<? super String, ? extends JsonValue> mappingFunction) {
+  public Canonical computeIfAbsent(
+      String key, @Nonnull Function<? super String, ? extends JsonValue> mappingFunction) {
     final Function<String, Canonical> myFunction = k -> Canonical.cast(mappingFunction.apply(k));
     return myMap.computeIfAbsent(key, myFunction);
   }
 
 
   @Override
-  public Canonical computeIfPresent(String key, @Nonnull BiFunction<? super String, ? super JsonValue, ? extends JsonValue> remappingFunction) {
-    final BiFunction<String, Canonical, Canonical> myFunction = (k, v) -> Canonical.cast(remappingFunction.apply(k, v));
+  public Canonical computeIfPresent(
+      String key, @Nonnull BiFunction<? super String, ? super JsonValue, ? extends JsonValue> remappingFunction) {
+    final BiFunction<String, Canonical, Canonical> myFunction = (k, v) -> Canonical.cast(
+        remappingFunction.apply(k, v));
     return myMap.computeIfPresent(key, myFunction);
   }
 
@@ -702,7 +787,7 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
 
 
   @Override
-  public NavigableMap<String, JsonValue> descendingMap() {
+  public CJObject descendingMap() {
     return new CJObject(myMap.descendingMap(), false);
   }
 
@@ -1053,39 +1138,59 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
 
 
   @Override
-  public JsonArray getJsonArray(String name) {
-    return optArray(name);
-  }
-
-
-  @Override
-  public JsonNumber getJsonNumber(String name) {
-    Canonical p = getCanonical(name);
-    return (p != null) ? (CJNumber) p : null;
-  }
-
-
-  @Override
-  public JsonObject getJsonObject(String name) {
-    return optObject(name);
-  }
-
-
-  @Override
-  public JsonString getJsonString(String name) {
-    Canonical p = getCanonical(name);
-    return (p != null) ? (CJString) p : null;
+  public CJArray getJsonArray(String name) {
+    return optJsonSafe(CJArray.class, ValueType.ARRAY, name);
   }
 
 
   /**
-   * Get a JsonValue from this object. The value must exist.
+   * Returns the Boolean value to which the specified name is mapped. This is a convenience method for
+   * (CJBoolean)get(name) to get the value.
+   *
+   * @param name the name whose associated value is to be returned
+   *
+   * @return the Boolean value to which the specified name is mapped, or null if this object contains no mapping for the name
+   * @throws IncorrectTypeException if the value to which the specified name is mapped is not assignable to JsonTrue
+   *                                or JsonFalse types
+   */
+  public CJBoolean getJsonBoolean(String name) {
+    Canonical canonical = getCanonical(name);
+    if (canonical == null) {
+      return null;
+    }
+    if (canonical instanceof CJBoolean cjBoolean) {
+      return cjBoolean;
+    }
+    throw new IncorrectTypeException(name, Set.of(ValueType.TRUE, ValueType.FALSE), canonical.getValueType());
+  }
+
+
+  @Override
+  public CJNumber getJsonNumber(String name) {
+    return optJsonSafe(CJNumber.class, ValueType.NUMBER, name);
+  }
+
+
+  @Override
+  public CJObject getJsonObject(String name) {
+    return optJsonSafe(CJObject.class, ValueType.OBJECT, name);
+  }
+
+
+  @Override
+  public CJString getJsonString(String name) {
+    return optJsonSafe(CJString.class, ValueType.STRING, name);
+  }
+
+
+  /**
+   * Get a Canonical from this object. The value must exist.
    *
    * @param key the value's key
    *
    * @return the value
    */
-  public JsonValue getJsonValue(String key) {
+  public Canonical getJsonValue(String key) {
     Canonical canonical = getCanonical(key);
     if (canonical == null) {
       throw new MissingItemException(key, EnumSet.allOf(ValueType.class));
@@ -1095,17 +1200,17 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
 
 
   /**
-   * Get a JsonValue from this object. If the value does not exist, the default value is returned.
+   * Get a Canonical from this object. If the value does not exist, the default value is returned.
    *
    * @param key          the value's key
    * @param defaultValue the default value
    *
    * @return the value
    */
-  public JsonValue getJsonValue(String key, JsonValue defaultValue) {
+  public Canonical getJsonValue(String key, JsonValue defaultValue) {
     Canonical canonical = getCanonical(key);
     if (canonical == null) {
-      return defaultValue;
+      return Canonical.cast(defaultValue);
     }
     return canonical;
   }
@@ -1119,10 +1224,10 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
    *
    * @return the value
    */
-  public JsonValue getJsonValue(String key, @Nonnull Function<String, JsonValue> defaultValue) {
+  public Canonical getJsonValue(String key, @Nonnull Function<String, JsonValue> defaultValue) {
     Canonical canonical = getCanonical(key);
     if (canonical == null) {
-      return defaultValue.apply(key);
+      return Canonical.cast(defaultValue.apply(key));
     }
     return canonical;
   }
@@ -1209,13 +1314,13 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
 
 
   @Override
-  public JsonValue getOrDefault(Object key, JsonValue defaultValue) {
+  public Canonical getOrDefault(Object key, JsonValue defaultValue) {
     if (!(key instanceof String)) {
       return null;
     }
 
-    JsonValue value = myMap.get((String) key);
-    return value != null ? value : defaultValue;
+    Canonical value = myMap.get((String) key);
+    return value != null ? value : Canonical.cast(defaultValue);
   }
 
 
@@ -1325,15 +1430,14 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
   }
 
 
-  @Override
-  public NavigableMap<String, JsonValue> headMap(String toKey, boolean inclusive) {
+  public CJObject headMap(String toKey, boolean inclusive) {
     return new CJObject(myMap.headMap(toKey, inclusive), false);
   }
 
 
   @Override
   @Nonnull
-  public SortedMap<String, JsonValue> headMap(String toKey) {
+  public CJObject headMap(String toKey) {
     return new CJObject(myMap.headMap(toKey, false), false);
   }
 
@@ -1372,8 +1476,8 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
    * @param key  the key
    * @param type the desired type
    *
-   * @return True if the property exists and has the required type. False if the property exists and does not have the required type.
-   *
+   * @return True if the property exists and has the required type. False if the property exists and does not have the
+   *     required type.
    * @throws MissingItemException if the property does not exist
    */
   public boolean isType(String key, ValueType type) {
@@ -1417,7 +1521,11 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
 
 
   @Override
-  public JsonValue merge(String key, JsonValue value, BiFunction<? super JsonValue, ? super JsonValue, ? extends JsonValue> remappingFunction) {
+  public JsonValue merge(
+      String key,
+      @Nonnull JsonValue value,
+      @Nonnull BiFunction<? super JsonValue, ? super JsonValue, ? extends JsonValue> remappingFunction
+  ) {
     final BinaryOperator<Canonical> myFunction = (v1, v2) -> Canonical.cast(remappingFunction.apply(v1, v2));
     return myMap.merge(key, Canonical.cast(value), myFunction);
   }
@@ -1514,6 +1622,18 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
   }
 
 
+  private <T extends Canonical> T optJsonSafe(Class<T> clazz, ValueType type, String key) {
+    Canonical canonical = getCanonical(key);
+    if (canonical == null) {
+      return null;
+    }
+    if (clazz.isInstance(canonical)) {
+      return clazz.cast(canonical);
+    }
+    throw new IncorrectTypeException(key, type, canonical.getValueType());
+  }
+
+
   /**
    * Get a JsonValue from this object. If the value does not exist, null is returned.
    *
@@ -1604,13 +1724,15 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
 
   @Override
   public Entry<String, JsonValue> pollFirstEntry() {
-    return new MyEntry(myMap.pollFirstEntry());
+    Entry<String, Canonical> entry = canonicalPollFirstEntry();
+    return entry != null ? new MyEntry(entry) : null;
   }
 
 
   @Override
   public Entry<String, JsonValue> pollLastEntry() {
-    return new MyEntry(myMap.pollLastEntry());
+    Entry<String, Canonical> entry = canonicalPollLastEntry();
+    return entry != null ? new MyEntry(entry) : null;
   }
 
 
@@ -1736,7 +1858,7 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
 
 
   @Override
-  public JsonValue putIfAbsent(String key, JsonValue value) {
+  public Canonical putIfAbsent(String key, JsonValue value) {
     return myMap.putIfAbsent(key, Canonical.cast(value));
   }
 
@@ -1864,7 +1986,7 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
 
 
   @Override
-  public JsonValue replace(String key, JsonValue value) {
+  public Canonical replace(String key, JsonValue value) {
     return myMap.replace(key, Canonical.cast(value));
   }
 
@@ -1883,27 +2005,27 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
 
 
   @Override
-  public NavigableMap<String, JsonValue> subMap(String fromKey, boolean fromInclusive, String toKey, boolean toInclusive) {
+  public CJObject subMap(String fromKey, boolean fromInclusive, String toKey, boolean toInclusive) {
     return new CJObject(myMap.subMap(fromKey, fromInclusive, toKey, toInclusive), false);
   }
 
 
   @Override
   @Nonnull
-  public SortedMap<String, JsonValue> subMap(String fromKey, String toKey) {
+  public CJObject subMap(String fromKey, String toKey) {
     return new CJObject(myMap.subMap(fromKey, true, toKey, false), false);
   }
 
 
   @Override
-  public NavigableMap<String, JsonValue> tailMap(String fromKey, boolean inclusive) {
+  public CJObject tailMap(String fromKey, boolean inclusive) {
     return new CJObject(myMap.tailMap(fromKey, inclusive), false);
   }
 
 
   @Override
   @Nonnull
-  public SortedMap<String, JsonValue> tailMap(String fromKey) {
+  public CJObject tailMap(String fromKey) {
     return new CJObject(myMap.tailMap(fromKey, true), false);
   }
 
@@ -1939,6 +2061,16 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
   @Override
   public String toString() {
     return CanonicalJsonProvider.isToStringPretty ? toPrettyString() : toCanonicalString();
+  }
+
+
+  /**
+   * Return an unmodifiable instance that contains the same data as this.
+   *
+   * @return an unmodifiable instance
+   */
+  public CJObject unmodifiable() {
+    return new CJObject(myMap, false, Collections::unmodifiableNavigableMap);
   }
 
 

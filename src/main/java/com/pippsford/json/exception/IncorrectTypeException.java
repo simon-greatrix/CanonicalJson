@@ -12,7 +12,7 @@ import jakarta.json.JsonValue.ValueType;
  */
 public class IncorrectTypeException extends ClassCastException {
 
-  private static final String TEMPLATE_AT = "Item at %s has type %s. Required %s.";
+  private static final String TEMPLATE_AT = "Item at \"%s\" has type %s. Required %s.";
 
   private static final String TEMPLATE_SIMPLE = "Item has type %s. Required %s.";
 

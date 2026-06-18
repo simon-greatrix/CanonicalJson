@@ -62,7 +62,7 @@ public abstract class PatchOperation implements FormattedJson {
     int s = array.size();
     List<PatchOperation> operations = new ArrayList<>(s);
     for (int i = 0; i < s; i++) {
-      CJObject jsonObject = CJObject.asJObject(array.getJsonObject(i));
+      CJObject jsonObject = CJObject.asObject(array.getJsonObject(i));
       String op = jsonObject.getString("op");
       switch (op) {
         case "add":

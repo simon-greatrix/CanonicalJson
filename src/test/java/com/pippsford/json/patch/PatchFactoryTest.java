@@ -30,7 +30,7 @@ public class PatchFactoryTest {
 
   private static final int MAX_DEPTH = 5;
 
-  private static Random random = new Random(0x7e57ab1e);
+  private static final Random random = new Random(0x7e57ab1e);
 
 
 
