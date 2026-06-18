@@ -293,6 +293,14 @@ public class CJObjectTest {
 
 
   @Test
+  public void getJsonBoolean() {
+    assertTrue(json.getJsonBoolean("boolean").getValue());
+    assertThrows(IncorrectTypeException.class, () -> json.getJsonBoolean("string"));
+    assertNull(json.getJsonBoolean("n/a"));
+  }
+
+
+  @Test
   public void getJsonNumber() {
     assertNotNull(json.getJsonNumber("small number"));
   }

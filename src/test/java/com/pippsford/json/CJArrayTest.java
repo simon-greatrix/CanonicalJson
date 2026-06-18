@@ -18,10 +18,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Spliterator;
+import java.util.stream.Collectors;
 
 import com.pippsford.json.exception.IncorrectTypeException;
 import com.pippsford.json.exception.MissingItemException;
@@ -601,6 +603,17 @@ public class CJArrayTest {
 
 
   @Test
+  public void testGetJsonBoolean() {
+    CJArray ja = new CJArray(Arrays.asList("a", true, false));
+    assertTrue(ja.getJsonBoolean(1).getValue());
+    assertFalse(ja.getJsonBoolean(2).getValue());
+    assertThrows(IncorrectTypeException.class, () -> ja.getJsonBoolean(0));
+    assertThrows(IndexOutOfBoundsException.class, () -> ja.getJsonBoolean(10));
+    assertThrows(IndexOutOfBoundsException.class, () -> ja.getJsonBoolean(-1));
+  }
+
+
+  @Test
   public void testGetJsonArray() {
     CJArray ja = new CJArray(Arrays.asList(JsonValue.EMPTY_JSON_ARRAY, JsonValue.EMPTY_JSON_OBJECT, 123, "abc"));
     assertNotNull(ja.getJsonArray(0));
@@ -929,6 +942,135 @@ public class CJArrayTest {
     assertEquals(10, ja.toArray().length);
     assertEquals(10, ja.toArray(new JsonValue[5]).length);
     assertEquals(10, ja.toArray(JsonValue[]::new).length);
+  }
+
+
+  @Test
+  public void asArrayFromArrayIntPrimitive() {
+    int[] src = {1, 2, 3};
+    CJArray ja = CJArray.asArrayFromArray(src);
+    assertEquals("[1,2,3]", ja.toString());
+  }
+
+
+  @Test
+  public void asArrayFromArrayStringObjects() {
+    String[] src = {"a", "b", "c"};
+    CJArray ja = CJArray.asArrayFromArray(src);
+    assertEquals("[\"a\",\"b\",\"c\"]", ja.toString());
+  }
+
+
+  @Test
+  public void asArrayFromArrayEmpty() {
+    CJArray ja = CJArray.asArrayFromArray(new int[0]);
+    assertEquals("[]", ja.toString());
+  }
+
+
+  @Test
+  public void asArrayFromArrayNull() {
+    assertThrows(NullPointerException.class, () -> CJArray.asArrayFromArray(null));
+  }
+
+
+  @Test
+  public void asArrayFromArrayNonArray() {
+    assertThrows(IllegalArgumentException.class, () -> CJArray.asArrayFromArray("not an array"));
+  }
+
+
+  @Test
+  public void canonicalIteratorTraversesInOrder() {
+    CJArray ja = new CJArray(Arrays.asList(10, 20, 30));
+    Iterator<Canonical> it = ja.canonicalIterator();
+    assertTrue(it.hasNext());
+    assertEquals(10, ((Number) it.next().getValue()).intValue());
+    assertEquals(20, ((Number) it.next().getValue()).intValue());
+    assertEquals(30, ((Number) it.next().getValue()).intValue());
+    assertFalse(it.hasNext());
+  }
+
+
+  @Test
+  public void canonicalIteratorOnEmpty() {
+    assertFalse(CJArray.EMPTY.canonicalIterator().hasNext());
+  }
+
+
+  @Test
+  public void canonicalListIteratorNoArgStartsAtZero() {
+    CJArray ja = new CJArray(Arrays.asList(1, 2, 3));
+    ListIterator<Canonical> it = ja.canonicalListIterator();
+    assertFalse(it.hasPrevious());
+    assertEquals(0, it.nextIndex());
+    it.next();
+    assertTrue(it.hasPrevious());
+  }
+
+
+  @Test
+  public void canonicalListIteratorMidList() {
+    CJArray ja = new CJArray(Arrays.asList(1, 2, 3));
+    ListIterator<Canonical> it = ja.canonicalListIterator(2);
+    assertEquals(2, it.nextIndex());
+    assertEquals(1, it.previousIndex());
+    assertEquals(30, ((Number) new CJArray(Arrays.asList(10, 20, 30)).canonicalListIterator(2).next().getValue()).intValue());
+  }
+
+
+  @Test
+  public void canonicalStreamCollectsAllElements() {
+    CJArray ja = new CJArray(Arrays.asList("x", "y", "z"));
+    List<Canonical> result = ja.canonicalStream().collect(Collectors.toList());
+    assertEquals(3, result.size());
+    assertEquals("\"x\"", result.get(0).toString());
+  }
+
+
+  @Test
+  public void canonicalStreamIsSequential() {
+    CJArray ja = new CJArray(Arrays.asList(1, 2));
+    assertFalse(ja.canonicalStream().isParallel());
+  }
+
+
+  @Test
+  public void canonicalParallelStreamIsParallel() {
+    CJArray ja = new CJArray(Arrays.asList(1, 2, 3));
+    assertTrue(ja.canonicalParallelStream().isParallel());
+  }
+
+
+  @Test
+  public void canonicalParallelStreamCollectsAllElements() {
+    CJArray ja = new CJArray(Arrays.asList(1, 2, 3));
+    long count = ja.canonicalParallelStream().count();
+    assertEquals(3, count);
+  }
+
+
+  @Test
+  public void canonicalSpliteratorCoversAllElements() {
+    CJArray ja = new CJArray(Arrays.asList(1, 2, 3, 4));
+    Spliterator<Canonical> sp = ja.canonicalSpliterator();
+    assertEquals(4, sp.getExactSizeIfKnown());
+  }
+
+
+  @Test
+  public void ensureCapacityArrayListBacked() {
+    CJArray ja = new CJArray(Arrays.asList(1, 2));
+    ja.ensureCapacity(1000);
+    assertEquals(2, ja.size());
+  }
+
+
+  @Test
+  public void ensureCapacityNonArrayListBacked() {
+    CJArray ja = CJArray.EMPTY;
+    ja.ensureCapacity(1000);
+    assertEquals(0, ja.size());
   }
 
 }
