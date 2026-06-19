@@ -2,16 +2,6 @@ package com.pippsford.json.jackson;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Writer;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.LinkedList;
-import jakarta.json.JsonValue;
-import jakarta.json.JsonValue.ValueType;
-
 import com.fasterxml.jackson.core.Base64Variant;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonStreamContext;
@@ -22,7 +12,6 @@ import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.core.io.IOContext;
 import com.fasterxml.jackson.core.json.DupDetector;
 import com.fasterxml.jackson.core.json.JsonWriteContext;
-
 import com.pippsford.json.CJArray;
 import com.pippsford.json.CJObject;
 import com.pippsford.json.Canonical;
@@ -30,6 +19,16 @@ import com.pippsford.json.primitive.CJFalse;
 import com.pippsford.json.primitive.CJJson;
 import com.pippsford.json.primitive.CJNull;
 import com.pippsford.json.primitive.CJTrue;
+import jakarta.json.JsonValue;
+import jakarta.json.JsonValue.ValueType;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Writer;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.EnumSet;
+import java.util.LinkedList;
 
 /**
  * Generator for canonical JSON. Note that as the canonical form requires a specific ordering of object properties, no output is created until the root object
@@ -39,11 +38,12 @@ import com.pippsford.json.primitive.CJTrue;
  */
 public class CanonicalGenerator extends JsonGenerator {
 
+  @SuppressWarnings("deprecation")
   private static final int DISALLOWED_FEATURES = Feature.WRITE_NUMBERS_AS_STRINGS.getMask()
       + Feature.WRITE_BIGDECIMAL_AS_PLAIN.getMask()
       + Feature.ESCAPE_NON_ASCII.getMask();
 
-
+  @SuppressWarnings("deprecation")
   private static final int REQUIRED_FEATURES = Feature.QUOTE_FIELD_NAMES.getMask()
       + Feature.QUOTE_NON_NUMERIC_NUMBERS.getMask();
 
@@ -51,6 +51,19 @@ public class CanonicalGenerator extends JsonGenerator {
       + Feature.AUTO_CLOSE_JSON_CONTENT.getMask()
       + Feature.FLUSH_PASSED_TO_STREAM.getMask()
       + REQUIRED_FEATURES;
+
+  @SuppressWarnings("deprecation")
+  private static final EnumSet<Feature> REQUIRED_FEATURE_SET = EnumSet.of(
+      Feature.QUOTE_FIELD_NAMES,
+      Feature.QUOTE_NON_NUMERIC_NUMBERS
+  );
+
+  @SuppressWarnings("deprecation")
+  private static final EnumSet<Feature> DISALLOWED_FEATURE_SET = EnumSet.of(
+      Feature.ESCAPE_NON_ASCII,
+      Feature.WRITE_BIGDECIMAL_AS_PLAIN,
+      Feature.WRITE_NUMBERS_AS_STRINGS
+  );
 
 
 
@@ -242,9 +255,7 @@ public class CanonicalGenerator extends JsonGenerator {
 
   @Override
   public JsonGenerator disable(Feature f) {
-    if (f == JsonGenerator.Feature.QUOTE_FIELD_NAMES
-        || f == JsonGenerator.Feature.QUOTE_NON_NUMERIC_NUMBERS
-    ) {
+    if (REQUIRED_FEATURE_SET.contains(f)) {
       throw new UnsupportedOperationException("Feature " + f + " may not be disabled for Canonical JSON");
     }
     featureMask &= ~f.getMask();
@@ -254,10 +265,7 @@ public class CanonicalGenerator extends JsonGenerator {
 
   @Override
   public JsonGenerator enable(Feature f) {
-    if (f == JsonGenerator.Feature.ESCAPE_NON_ASCII
-        || f == JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN
-        || f == JsonGenerator.Feature.WRITE_NUMBERS_AS_STRINGS
-    ) {
+    if (DISALLOWED_FEATURE_SET.contains(f)) {
       throw new UnsupportedOperationException("Feature " + f + " may not be enabled for Canonical JSON");
     }
     featureMask |= f.getMask();
@@ -598,25 +606,35 @@ public class CanonicalGenerator extends JsonGenerator {
    * @throws IOException if the write fails
    */
   public void writeRawCanonicalType(Canonical object, boolean isContainer) throws IOException {
-    String json = Canonical.toCanonicalString(object);
-    Canonical raw = new CJJson(json);
-
     if (isContainer) {
       // The caller has already pushed the start marker, creating the container. We pop the new container off the stack and discard it.
-      RawContainer rawContainer = new RawContainer(json);
-      stack.pop();
+      Container current = stack.pop();
+
+      // For PROPERTY-style type serializers, type properties (e.g. @class) may have already been
+      // written into the container before this method is called. Merge them with the raw content.
+      String json;
+      if (current instanceof ObjectContainer && object.getValueType() == ValueType.OBJECT) {
+        CJObject existing = ((ObjectContainer) current).object;
+        CJObject merged = new CJObject();
+        merged.putAll(existing);
+        merged.putAll((CJObject) object);
+        json = Canonical.toCanonicalString(merged);
+      } else {
+        json = Canonical.toCanonicalString(object);
+      }
+
+      Canonical raw = new CJJson(json);
       if (!stack.isEmpty()) {
         // have to replace the link to the new container in the parent with the raw JSON
         Container parent = stack.peek();
         parent.set(writeContext.getParent(), raw);
       }
-      stack.push(rawContainer);
-
+      stack.push(new RawContainer(json));
       return;
     }
 
     // Not a container, so no markers to handle
-    writeCanonical(raw);
+    writeCanonical(new CJJson(Canonical.toCanonicalString(object)));
   }
 
 

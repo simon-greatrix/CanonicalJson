@@ -66,12 +66,12 @@ public class CJString extends CJBase implements JsonString {
    *   <li>using two-character escape sequences where possible for characters that require escaping:
    *     <ul>
    *       <li><code>&#92;b</code> U+0008 BACKSPACE</li>
-   *       <li><code>&#92;t</code> U+0009 CHARACTER TABULATION (“tab”)</li>
-   *       <li><code>&#92;n</code> U+000A LINE FEED (“newline”)</li>
+   *       <li><code>&#92;t</code> U+0009 CHARACTER TABULATION ("tab")</li>
+   *       <li><code>&#92;n</code> U+000A LINE FEED ("newline")</li>
    *       <li><code>&#92;f</code> U+000C FORM FEED</li>
    *       <li><code>&#92;r</code> U+000D CARRIAGE RETURN</li>
    *       <li><code>&#92;"</code> U+0022 QUOTATION MARK</li>
-   *       <li><code>&#92;&#92;</code> U+005C REVERSE SOLIDUS (“backslash”), and</li>
+   *       <li><code>&#92;&#92;</code> U+005C REVERSE SOLIDUS ("backslash"), and</li>
    *     </ul>
    *   </li>
    *   <li>using six-character <code>&#92;u00xx</code> uppercase hexadecimal escape sequences for control characters that require escaping but lack a

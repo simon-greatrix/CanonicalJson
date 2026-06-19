@@ -643,6 +643,11 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
   }
 
 
+  /**
+   * Get a set containing the entries of this map using the Canonical values.
+   *
+   * @return the entry set
+   */
   @Nonnull
   public Set<Entry<String, Canonical>> canonicalEntrySet() {
     return myMap.entrySet();
@@ -650,7 +655,7 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
 
 
   /**
-   * Get the first entry in the map, with the value as a {@link Canonical}
+   * Get the first entry in the map, with the value as a {@link Canonical}.
    *
    * @return the first entry
    */
@@ -660,7 +665,7 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
 
 
   /**
-   * Get the floor entry for the given key in the map, with the value as a {@link Canonical}
+   * Get the floor entry for the given key in the map, with the value as a {@link Canonical}.
    *
    * @param key the key to search for
    *
@@ -681,31 +686,65 @@ public class CJObject implements NavigableMap<String, JsonValue>, JsonObject, CJ
   }
 
 
+  /**
+   * Get the key-value mapping associated with the least key strictly greater than the given key and having a Canonical value.
+   *
+   * @param key the key to search for
+   *
+   * @return the entry or null
+   */
   public Entry<String, Canonical> canonicalHigherEntry(String key) {
     return myMap.higherEntry(key);
   }
 
 
+  /**
+   * Get the last key-value mapping having a Canonical value.
+   *
+   * @return the entry or null
+   */
   public Entry<String, Canonical> canonicalLastEntry() {
     return myMap.lastEntry();
   }
 
 
+  /**
+   * Get the key-value mapping associated with the least key strictly lower than the given key and having a Canonical value.
+   *
+   * @param key the key to search for
+   *
+   * @return the entry or null
+   */
   public Entry<String, Canonical> canonicalLowerEntry(String key) {
     return myMap.lowerEntry(key);
   }
 
 
+  /**
+   * Removes and returns a key-value mapping associated with the least key in this map, or {@code null} if the map is empty.
+   *
+   * @return the removed first entry of this map, or {@code null} if this map is empty
+   */
   public Entry<String, Canonical> canonicalPollFirstEntry() {
     return myMap.pollFirstEntry();
   }
 
 
+  /**
+   * Removes and returns a key-value mapping associated with the greatest key in this map, or {@code null} if the map is empty.
+   *
+   * @return the removed first entry of this map, or {@code null} if this map is empty
+   */
   public Entry<String, Canonical> canonicalPollLastEntry() {
     return myMap.pollLastEntry();
   }
 
 
+  /**
+   * Get the values for this as a collection of Canonical objects.
+   *
+   * @return the Canonical values
+   */
   @Nonnull
   public Collection<Canonical> canonicalValues() {
     return myMap.values();

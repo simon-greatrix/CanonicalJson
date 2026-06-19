@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.pippsford.json.CJObject;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
@@ -17,6 +18,7 @@ import jakarta.json.JsonStructure;
 import jakarta.json.JsonValue;
 import jakarta.json.stream.JsonParsingException;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.fasterxml.jackson.dataformat.smile.SmileGenerator;
@@ -286,5 +288,30 @@ public class JacksonReaderTest {
     ObjectMapper mapper = new ObjectMapper();
     mapper.registerModule(new JsonModule());
     CJObject object = mapper.readValue("{\"a\":1}", CJObject.class);
+  }
+
+
+  @Test
+  public void jacksonGeneratorCloseWrapsIoException() throws IOException {
+    JsonGenerator mock = Mockito.mock(JsonGenerator.class);
+    Mockito.doThrow(new IOException("close failure")).when(mock).close();
+    JacksonGenerator gen = new JacksonGenerator(mock);
+    JsonIOException ex = assertThrows(JsonIOException.class, gen::close);
+    assertEquals("close failure", ex.getCause().getMessage());
+  }
+
+
+  @Test
+  public void jacksonReaderFromTreeNode() throws IOException {
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.registerModule(new JsonModule());
+    ObjectNode tree = mapper.createObjectNode();
+    tree.put("a", 1);
+    tree.put("b", true);
+
+    JacksonReader reader = new JacksonReader(tree);
+    JsonValue result = reader.readValue();
+    reader.close();
+    assertEquals("{\"a\":1,\"b\":true}", result.toString());
   }
 }

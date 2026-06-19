@@ -4,11 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-
 import com.pippsford.json.CJObject;
 import com.pippsford.json.builder.ArrayBuilder;
 import com.pippsford.json.builder.ObjectBuilder;
@@ -18,10 +13,17 @@ import jakarta.json.JsonObject;
 import jakarta.json.JsonStructure;
 import jakarta.json.JsonValue;
 import jakarta.json.stream.JsonParsingException;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.core.JsonParser;
+import tools.jackson.core.ObjectReadContext;
+import tools.jackson.core.ObjectWriteContext;
+import tools.jackson.core.TokenStreamFactory;
 import tools.jackson.core.exc.JacksonIOException;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.dataformat.smile.SmileFactory;
@@ -31,11 +33,16 @@ import tools.jackson.dataformat.smile.SmileFactory;
  */
 public class JacksonReaderTest {
 
+  static JsonParser createParser(TokenStreamFactory factory, byte[] data) {
+    return factory.createParser(ObjectReadContext.empty(), data, 0, data.length);
+  }
+
+
   @Test
   public void test1() throws IOException {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     SmileFactory smileFactory = new SmileFactory();
-    JsonGenerator smileGenerator = smileFactory.createGenerator(outputStream);
+    JsonGenerator smileGenerator = smileFactory.createGenerator(ObjectWriteContext.empty(), outputStream);
     JacksonGenerator jacksonGenerator = new JacksonGenerator(smileGenerator);
 
     JsonObject object = new ObjectBuilder()
@@ -51,7 +58,7 @@ public class JacksonReaderTest {
     jacksonGenerator.generate(object);
     jacksonGenerator.close();
 
-    JsonParser smileParser = smileFactory.createParser(outputStream.toByteArray());
+    JsonParser smileParser = createParser(smileFactory, outputStream.toByteArray());
     JacksonReader jacksonReader = new JacksonReader(smileParser);
     JsonValue output = jacksonReader.read();
     jacksonReader.close();
@@ -96,7 +103,7 @@ public class JacksonReaderTest {
   @Test
   public void test14() throws IOException {
     SmileFactory smileFactory = new SmileFactory();
-    JsonParser smileParser = smileFactory.createParser(new byte[0]);
+    JsonParser smileParser = createParser(smileFactory, new byte[0]);
     JacksonReader jacksonReader = new JacksonReader(smileParser);
 
     JsonParsingException e = assertThrows(JsonParsingException.class, () -> jacksonReader.readValue());
@@ -117,13 +124,13 @@ public class JacksonReaderTest {
   public void test2() throws IOException {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     SmileFactory smileFactory = new SmileFactory();
-    JsonGenerator smileGenerator = smileFactory.createGenerator(outputStream);
+    JsonGenerator smileGenerator = smileFactory.createGenerator(ObjectWriteContext.empty(), outputStream);
     JacksonGenerator jacksonGenerator = new JacksonGenerator(smileGenerator);
     jacksonGenerator.generate(null);
     jacksonGenerator.generate(JsonValue.TRUE);
     jacksonGenerator.close();
 
-    JsonParser smileParser = smileFactory.createParser(outputStream.toByteArray());
+    JsonParser smileParser = createParser(smileFactory, outputStream.toByteArray());
     JacksonReader jacksonReader = new JacksonReader(smileParser);
     JsonValue output = jacksonReader.readValue();
     assertEquals(JsonValue.NULL, output);
@@ -142,7 +149,7 @@ public class JacksonReaderTest {
   public void test3() throws IOException {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     SmileFactory smileFactory = new SmileFactory();
-    JsonGenerator smileGenerator = smileFactory.createGenerator(outputStream);
+    JsonGenerator smileGenerator = smileFactory.createGenerator(ObjectWriteContext.empty(), outputStream);
     JacksonGenerator jacksonGenerator = new JacksonGenerator(smileGenerator);
 
     JsonObject object = new ObjectBuilder()
@@ -158,7 +165,7 @@ public class JacksonReaderTest {
     jacksonGenerator.generate(object);
     jacksonGenerator.close();
 
-    JsonParser smileParser = smileFactory.createParser(outputStream.toByteArray());
+    JsonParser smileParser = createParser(smileFactory, outputStream.toByteArray());
     JacksonReader jacksonReader = new JacksonReader(smileParser);
     JsonObject output = jacksonReader.readObject();
     jacksonReader.close();
@@ -171,13 +178,13 @@ public class JacksonReaderTest {
   public void test4() throws IOException {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     SmileFactory smileFactory = new SmileFactory();
-    JsonGenerator smileGenerator = smileFactory.createGenerator(outputStream);
+    JsonGenerator smileGenerator = smileFactory.createGenerator(ObjectWriteContext.empty(), outputStream);
     JacksonGenerator jacksonGenerator = new JacksonGenerator(smileGenerator);
 
     jacksonGenerator.generate(JsonValue.TRUE);
     jacksonGenerator.close();
 
-    JsonParser smileParser = smileFactory.createParser(outputStream.toByteArray());
+    JsonParser smileParser = createParser(smileFactory, outputStream.toByteArray());
     JacksonReader jacksonReader = new JacksonReader(smileParser);
 
     JsonParsingException e = assertThrows(JsonParsingException.class, () -> jacksonReader.readObject());
@@ -189,13 +196,13 @@ public class JacksonReaderTest {
   public void test5() throws IOException {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     SmileFactory smileFactory = new SmileFactory();
-    JsonGenerator smileGenerator = smileFactory.createGenerator(outputStream);
+    JsonGenerator smileGenerator = smileFactory.createGenerator(ObjectWriteContext.empty(), outputStream);
     JacksonGenerator jacksonGenerator = new JacksonGenerator(smileGenerator);
 
     jacksonGenerator.generate(JsonValue.TRUE);
     jacksonGenerator.close();
 
-    JsonParser smileParser = smileFactory.createParser(outputStream.toByteArray());
+    JsonParser smileParser = createParser(smileFactory, outputStream.toByteArray());
     JacksonReader jacksonReader = new JacksonReader(smileParser);
 
     JsonParsingException e = assertThrows(JsonParsingException.class, () -> jacksonReader.readArray());
@@ -207,13 +214,13 @@ public class JacksonReaderTest {
   public void test6() throws IOException {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     SmileFactory smileFactory = new SmileFactory();
-    JsonGenerator smileGenerator = smileFactory.createGenerator(outputStream);
+    JsonGenerator smileGenerator = smileFactory.createGenerator(ObjectWriteContext.empty(), outputStream);
     JacksonGenerator jacksonGenerator = new JacksonGenerator(smileGenerator);
 
     jacksonGenerator.generate(JsonValue.TRUE);
     jacksonGenerator.close();
 
-    JsonParser smileParser = smileFactory.createParser(outputStream.toByteArray());
+    JsonParser smileParser = createParser(smileFactory, outputStream.toByteArray());
     JacksonReader jacksonReader = new JacksonReader(smileParser);
 
     JsonParsingException e = assertThrows(JsonParsingException.class, () -> jacksonReader.read());
@@ -225,7 +232,7 @@ public class JacksonReaderTest {
   public void test7() throws IOException {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     SmileFactory smileFactory = new SmileFactory();
-    JsonGenerator smileGenerator = smileFactory.createGenerator(outputStream);
+    JsonGenerator smileGenerator = smileFactory.createGenerator(ObjectWriteContext.empty(), outputStream);
     JacksonGenerator jacksonGenerator = new JacksonGenerator(smileGenerator);
 
     JsonArray array = new ArrayBuilder().add("x").add("y").add("z")
@@ -236,7 +243,7 @@ public class JacksonReaderTest {
     jacksonGenerator.generate(array);
     jacksonGenerator.close();
 
-    JsonParser smileParser = smileFactory.createParser(outputStream.toByteArray());
+    JsonParser smileParser = createParser(smileFactory, outputStream.toByteArray());
     JacksonReader jacksonReader = new JacksonReader(smileParser);
     JsonStructure output = jacksonReader.read();
     jacksonReader.close();
@@ -249,7 +256,7 @@ public class JacksonReaderTest {
   public void test8() throws IOException {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     SmileFactory smileFactory = new SmileFactory();
-    JsonGenerator smileGenerator = smileFactory.createGenerator(outputStream);
+    JsonGenerator smileGenerator = smileFactory.createGenerator(ObjectWriteContext.empty(), outputStream);
     JacksonGenerator jacksonGenerator = new JacksonGenerator(smileGenerator);
 
     JsonArray array = new ArrayBuilder().add("x").add("y").add("z")
@@ -260,7 +267,7 @@ public class JacksonReaderTest {
     jacksonGenerator.generate(array);
     jacksonGenerator.close();
 
-    JsonParser smileParser = smileFactory.createParser(outputStream.toByteArray());
+    JsonParser smileParser = createParser(smileFactory, outputStream.toByteArray());
     JacksonReader jacksonReader = new JacksonReader(smileParser);
     JsonStructure output = jacksonReader.readArray();
     jacksonReader.close();

@@ -1,14 +1,5 @@
 package com.pippsford.json.jackson;
 
-import java.io.IOException;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.function.Function;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ContainerNode;
@@ -17,14 +8,6 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ValueNode;
-import jakarta.json.JsonArray;
-import jakarta.json.JsonException;
-import jakarta.json.JsonNumber;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonString;
-import jakarta.json.JsonStructure;
-import jakarta.json.JsonValue;
-
 import com.pippsford.json.CJArray;
 import com.pippsford.json.CJObject;
 import com.pippsford.json.primitive.CJFalse;
@@ -32,6 +15,20 @@ import com.pippsford.json.primitive.CJNull;
 import com.pippsford.json.primitive.CJString;
 import com.pippsford.json.primitive.CJTrue;
 import com.pippsford.json.primitive.numbers.CJNumber;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonException;
+import jakarta.json.JsonNumber;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonString;
+import jakarta.json.JsonStructure;
+import jakarta.json.JsonValue;
+import java.io.IOException;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Function;
 
 /**
  * A utility class to convert between Jackson's JsonNode and jakarta's JsonValue.
@@ -64,9 +61,7 @@ public class Convert {
 
   private static JsonValue createJsonObject(ObjectNode node) {
     CJObject object = new CJObject();
-    Iterator<Entry<String, JsonNode>> iterator = node.fields();
-    while (iterator.hasNext()) {
-      Entry<String, JsonNode> entry = iterator.next();
+    for (Entry<String, JsonNode> entry : node.properties()) {
       object.put(entry.getKey(), toJson(entry.getValue()));
     }
     return object;
@@ -74,8 +69,7 @@ public class Convert {
 
 
   private static ValueNode createNumberNode(JsonNodeCreator nodeCreator, JsonNumber value) {
-    if (value instanceof CJNumber) {
-      CJNumber number = (CJNumber) value;
+    if (value instanceof CJNumber number) {
       switch (number.getNumberType()) {
         case CJNumber.TYPE_INT:
           return nodeCreator.numberNode(number.intValue());
@@ -135,7 +129,7 @@ public class Convert {
    * @return the Jackson equivalent
    */
   public static JsonNode toJackson(JsonValue value) {
-    return toJackson(JsonNodeFactory.withExactBigDecimals(false), value);
+    return toJackson(new JsonNodeFactory(false), value);
   }
 
 
@@ -147,7 +141,7 @@ public class Convert {
    * @return the Jackson equivalent
    */
   public static ArrayNode toJackson(JsonArray value) {
-    return (ArrayNode) toJackson(JsonNodeFactory.withExactBigDecimals(false), value);
+    return (ArrayNode) toJackson(new JsonNodeFactory(false), value);
   }
 
 
@@ -159,7 +153,7 @@ public class Convert {
    * @return the Jackson equivalent
    */
   public static ObjectNode toJackson(JsonObject value) {
-    return (ObjectNode) toJackson(JsonNodeFactory.withExactBigDecimals(false), value);
+    return (ObjectNode) toJackson(new JsonNodeFactory(false), value);
   }
 
 
@@ -173,7 +167,7 @@ public class Convert {
    */
   @SuppressWarnings("unchecked")
   public static <T extends ContainerNode<T>> ContainerNode<T> toJackson(JsonStructure value) {
-    return (ContainerNode<T>) toJackson(JsonNodeFactory.withExactBigDecimals(false), value);
+    return (ContainerNode<T>) toJackson(new JsonNodeFactory(false), value);
   }
 
 

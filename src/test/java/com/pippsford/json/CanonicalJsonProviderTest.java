@@ -1,5 +1,6 @@
 package com.pippsford.json;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.InputStream;
@@ -242,4 +243,16 @@ public class CanonicalJsonProviderTest {
     assertTrue(provider instanceof CanonicalJsonProvider);
   }
 
+  @Test
+  public void prettyString() {
+    boolean original = CanonicalJsonProvider.isToStringPretty();
+    try {
+      CanonicalJsonProvider.setIsToStringPretty(true);
+      assertTrue(CanonicalJsonProvider.isToStringPretty());
+      CanonicalJsonProvider.setIsToStringPretty(false);
+      assertFalse(CanonicalJsonProvider.isToStringPretty());
+    } finally {
+      CanonicalJsonProvider.setIsToStringPretty(original);
+    }
+  }
 }

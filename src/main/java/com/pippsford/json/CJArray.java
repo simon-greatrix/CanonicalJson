@@ -289,6 +289,7 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
     return list;
   }
 
+
   /** The backing list. */
   private final List<Canonical> myList;
 
@@ -491,18 +492,33 @@ public class CJArray implements JsonArray, CJStructure, Canonical {
   }
 
 
+  /**
+   * Get a parallel stream of the Canonical items in this.
+   *
+   * @return the stream
+   */
   @Nonnull
   public Stream<Canonical> canonicalParallelStream() {
     return myList.parallelStream();
   }
 
 
+  /**
+   * Get a spliterator instance on the Canonical items in this.
+   *
+   * @return the spliterator
+   */
   @Nonnull
   public Spliterator<Canonical> canonicalSpliterator() {
     return myList.spliterator();
   }
 
 
+  /**
+   * Get a sequential stream of the Canonical items in this.
+   *
+   * @return the stream
+   */
   @Nonnull
   public Stream<Canonical> canonicalStream() {
     return myList.stream();

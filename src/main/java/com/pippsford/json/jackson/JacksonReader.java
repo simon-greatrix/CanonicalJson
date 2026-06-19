@@ -156,23 +156,19 @@ public class JacksonReader implements JsonReader {
 
 
   private Location getLocation() {
-    JsonLocation l = jsonParser.getTokenLocation();
+    JsonLocation l = jsonParser.currentTokenLocation();
     return new Location(l.getColumnNr(), l.getLineNr(), l.getByteOffset());
   }
 
 
   private JsonValue parseNumber() throws IOException {
-    switch (jsonParser.getNumberType()) {
-      case INT:
-        return CJNumber.create(jsonParser.getIntValue());
-      case LONG:
-        return CJNumber.create(jsonParser.getLongValue());
-      case BIG_INTEGER:
-        return CJNumber.cast(jsonParser.getBigIntegerValue());
-      default:
-        // hopefully unreachable
-        throw new IllegalStateException("Unexpected integer type: " + jsonParser.getNumberType());
-    }
+    return switch (jsonParser.getNumberType()) {
+      case INT -> CJNumber.create(jsonParser.getIntValue());
+      case LONG -> CJNumber.create(jsonParser.getLongValue());
+      case BIG_INTEGER -> CJNumber.cast(jsonParser.getBigIntegerValue());
+      // hopefully unreachable
+      default -> throw new IllegalStateException("Unexpected integer type: " + jsonParser.getNumberType());
+    };
   }
 
 
@@ -216,6 +212,10 @@ public class JacksonReader implements JsonReader {
       JsonToken token = jsonParser.hasCurrentToken() ? jsonParser.currentToken() : jsonParser.nextToken();
       if (token == JsonToken.START_OBJECT) {
         return doReadObject(true);
+      }
+      if (token == JsonToken.FIELD_NAME) {
+        // Parser is already inside an object (e.g. after a type discriminator property was consumed by Jackson).
+        return doReadObject(false);
       }
       throw new JsonParsingException("Cannot create object when next item in JSON stream is " + token, getLocation());
     } catch (IOException e) {

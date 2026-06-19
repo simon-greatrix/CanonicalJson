@@ -43,7 +43,7 @@ public class CanonicalFactoryTest {
   @Test
   public void createGeneratorNotUtf8_2() throws IOException {
     UnsupportedOperationException e =
-        assertThrows(UnsupportedOperationException.class, () -> instance.createGenerator(new ByteArrayOutputStream(), JsonEncoding.UTF16_BE));
+        assertThrows(UnsupportedOperationException.class, () -> instance.createGenerator(ObjectWriteContext.empty(), new ByteArrayOutputStream(), JsonEncoding.UTF16_BE));
     assertEquals("Canonical encoding must be UTF-8, not UTF16_BE", e.getMessage());
   }
 
@@ -51,7 +51,7 @@ public class CanonicalFactoryTest {
   @Test
   public void createGeneratorUtf8_1() throws IOException {
     // We just assume the generator works
-    assertNotNull(instance.createGenerator(new ByteArrayOutputStream(), JsonEncoding.UTF8));
+    assertNotNull(instance.createGenerator(ObjectWriteContext.empty(), new ByteArrayOutputStream(), JsonEncoding.UTF8));
   }
 
 

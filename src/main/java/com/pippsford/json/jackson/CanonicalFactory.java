@@ -1,23 +1,36 @@
 package com.pippsford.json.jackson;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Writer;
-
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.core.io.CharacterEscapes;
 import com.fasterxml.jackson.core.io.IOContext;
-
 import com.pippsford.json.io.Utf8Writer;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Writer;
+import java.util.EnumSet;
 
 /**
  * A Jackson JSON output factory that writes canonical JSON.
  */
 public class CanonicalFactory extends JsonFactory {
+
+  @SuppressWarnings("deprecation")
+  private static final EnumSet<JsonGenerator.Feature> FORBIDDEN_FEATURES = EnumSet.of(
+      JsonGenerator.Feature.ESCAPE_NON_ASCII,
+      JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN,
+      JsonGenerator.Feature.WRITE_NUMBERS_AS_STRINGS
+  );
+
+  @SuppressWarnings("deprecation")
+  private static final EnumSet<JsonGenerator.Feature> REQUIRED_FEATURES = EnumSet.of(
+      JsonGenerator.Feature.QUOTE_FIELD_NAMES,
+      JsonGenerator.Feature.QUOTE_NON_NUMERIC_NUMBERS
+  );
+
 
   /** New instance using standard settings. */
   public CanonicalFactory() {
@@ -25,7 +38,8 @@ public class CanonicalFactory extends JsonFactory {
   }
 
 
-  /** New instance using the provided code.
+  /**
+   * New instance using the provided code.
    *
    * @param objectCodec the codec to use
    */
@@ -78,9 +92,7 @@ public class CanonicalFactory extends JsonFactory {
 
   @Override
   public JsonFactory disable(JsonGenerator.Feature f) {
-    if (f == JsonGenerator.Feature.QUOTE_FIELD_NAMES
-        || f == JsonGenerator.Feature.QUOTE_NON_NUMERIC_NUMBERS
-    ) {
+    if (REQUIRED_FEATURES.contains(f)) {
       throw new UnsupportedOperationException("Feature " + f + " may not be disabled for Canonical JSON");
     }
     return super.disable(f);
@@ -89,10 +101,7 @@ public class CanonicalFactory extends JsonFactory {
 
   @Override
   public JsonFactory enable(JsonGenerator.Feature f) {
-    if (f == JsonGenerator.Feature.ESCAPE_NON_ASCII
-        || f == JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN
-        || f == JsonGenerator.Feature.WRITE_NUMBERS_AS_STRINGS
-    ) {
+    if (FORBIDDEN_FEATURES.contains(f)) {
       throw new UnsupportedOperationException("Feature " + f + " may not be enabled for Canonical JSON");
     }
     return super.enable(f);

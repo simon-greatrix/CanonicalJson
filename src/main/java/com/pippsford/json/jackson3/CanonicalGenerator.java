@@ -215,6 +215,7 @@ public class CanonicalGenerator extends GeneratorBase {
   }
 
 
+  @Override
   protected void _verifyValueWrite(String typeMsg) {
     final int status = writeContext.writeValue();
     switch (status) {

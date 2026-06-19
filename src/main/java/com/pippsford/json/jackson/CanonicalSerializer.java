@@ -1,15 +1,16 @@
 package com.pippsford.json.jackson;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.type.WritableTypeId;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
-
 import com.pippsford.json.Canonical;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonValue;
+import java.io.IOException;
+import java.util.Map;
 
 /**
  * A serializer of JSON values.
@@ -38,23 +39,26 @@ public class CanonicalSerializer<T extends Canonical> extends JsonSerializer<T> 
 
   @Override
   public void serializeWithType(Canonical object, JsonGenerator gen, SerializerProvider serializers, TypeSerializer typeSer) throws IOException {
-    gen.setCurrentValue(object);
-    JsonToken token;
-    switch (object.getValueType()) {
-      case ARRAY:
-        token = JsonToken.START_ARRAY;
-        break;
-      case OBJECT:
-        token = JsonToken.START_OBJECT;
-        break;
-      default:
-        // We use this when the type is neither an array nor an object.
-        token = JsonToken.VALUE_EMBEDDED_OBJECT;
-        break;
-    }
+    gen.assignCurrentValue(object);
+
+    JsonToken token = switch (object.getValueType()) {
+      case ARRAY -> JsonToken.START_ARRAY;
+      case OBJECT -> JsonToken.START_OBJECT;
+      default -> // We use this when the type is neither an array nor an object.
+          JsonToken.VALUE_EMBEDDED_OBJECT;
+    };
+
     WritableTypeId typeIdDef = typeSer.writeTypePrefix(gen, typeSer.typeId(object, token));
+
     if (gen instanceof CanonicalGenerator) {
       ((CanonicalGenerator) gen).writeRawCanonicalType(object, token != JsonToken.VALUE_EMBEDDED_OBJECT);
+    } else if (token == JsonToken.START_OBJECT) {
+      // writeRawValue cannot be used in object context (generator expects field name after writeTypePrefix opens '{').
+      JacksonGenerator jg = new JacksonGenerator(gen);
+      for (Map.Entry<String, JsonValue> entry : ((JsonObject) object).entrySet()) {
+        gen.writeFieldName(entry.getKey());
+        jg.generate(entry.getValue());
+      }
     } else {
       String text = Canonical.toCanonicalString(object);
       if (token != JsonToken.VALUE_EMBEDDED_OBJECT) {
@@ -63,6 +67,7 @@ public class CanonicalSerializer<T extends Canonical> extends JsonSerializer<T> 
       }
       gen.writeRawValue(text);
     }
+
     typeSer.writeTypeSuffix(gen, typeIdDef);
   }
 
